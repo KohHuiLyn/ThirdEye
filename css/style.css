@@ -8317,9 +8317,9 @@ textarea.form-control {
 
 /* Style the checkmark/indicator */
 .checkbox-primary {
-  color: #fbceb5; }
+  color: #E49322; }
   .checkbox-primary input:checked ~ .checkmark:after {
-    color: #fbceb5; }
+    color: #E49322; }
 
 .btn {
   cursor: pointer;
@@ -8331,8 +8331,8 @@ textarea.form-control {
   .btn:hover, .btn:active, .btn:focus {
     outline: none; }
   .btn.btn-primary {
-    background: #fbceb5 !important;
-    border: 1px solid #fbceb5 !important;
+    background: #E49322 !important;
+    border: 1px solid #E49322 !important;
     color: #000 !important; }
     .btn.btn-primary:hover {
       border: 1px solid #fbceb5;

@@ -59,9 +59,9 @@ scipy==1.5.4
 selenium==3.141.0
 six==1.15.0
 SQLAlchemy==1.4.31
+tensorflow==2.3.1
 tensorboard==2.4.0
 tensorboard-plugin-wit==1.7.0
-tensorflow==2.3.1
 tensorflow-estimator==2.3.0
 termcolor==1.1.0
 toml==0.10.2

@@ -19,3 +19,7 @@ import re
 import base64
 import tempfile
 import numpy as np
+
+@app.route("/")
+def home():
+    return " Flask ready"

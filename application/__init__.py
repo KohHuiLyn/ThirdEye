@@ -8,10 +8,10 @@ import os
 #create the Flask app
 app = Flask(__name__)
 Bootstrap(app)
-CORS(app)
+# CORS(app)
 # Wrap Flask app with Talisman
-Talisman(app, content_security_policy=None)
+# Talisman(app, content_security_policy=None)
 
-
+app.config.from_pyfile('config.cfg')
 from application import routes
 

@@ -1,12 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-</head>
-<body>
-    <h1>Homepage</h1>
-</body>
-</html>
+{% extends "layout.html" %}
+
+{% block title %}
+Home
+{% endblock %}
+{% block content %}
+<style>
+    #mainbox{
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+           
+             
+            }
+    .cameras{
+        display:inline-block;
+        width:100%;
+        
+    }
+    .camerarow{
+
+    }
+    #box{border:  solid }
+
+</style>
+
+<div class="container" id="mainbox">
+    <div class="col">
+        <video id="video" width="380" height="240" autoplay></video>
+       <div class="row" id="camerarow">
+            <div class="col g-1"><button class="cameras" id="start-camera">Start Camera</button></div>
+            <div class="col g-1">
+                <button class="cameras" id="start-record">Start Recording</button>
+           </div>
+            </div>
+        <div class="row" id="camerarow">
+            <div class="col g-1"><button class="cameras" id="stop-record">Stop Recording</button></div>
+           <div class="col g-1"> <button class="cameras" id="pause-resume">Pause/Resume</button></div>
+           <div class="col g-1"> <button class="cameras" id="download-video" download="test.mp4">Download Video</button></div>
+        </div>
+    </div>
+
+   <div class="col"> 
+        
+           <div class="col">
+                <div class="form-wrapper">
+                    
+                    <form name="frmMethod" method="POST" action="/upload">
+                        <fieldset class="form-group">
+                            <p>
+                                {{form.videoMethod.label}}<br>
+                                {{form.videoMethod}}
+                                {% for error in form.videoMethod.errors %}
+                                <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            </p>
+                        </fieldset>
+                    </form>
+           </div>
+                <div class="col">
+                    <div id="upload">
+                        <input type='file' accept="video/mp4" id="imgInp" onchange="readURL(this);">
+                        <img src="" id="uploaded">
+                        <input type="button" class="btn-success" value="Analyse" onclick="predict_photo()">
+                    </div>
+                </div>
+                
+
+            
+        </div
+        <p>{{form.videoMethod.data}}</p>
+        <div>
+        {% if method==0%}
+        <p>all we ever do</p>
+        {%elif method==1%}
+        <p>Does this work fam</p>
+        {%endif%}
+        </div>
+    </div>
+    <script src="../static/js/Webcam.js"></script>
+    
+    
+            
+       
+</div>
+
+
+
+{% endblock %}

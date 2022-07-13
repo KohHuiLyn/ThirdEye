@@ -24,6 +24,10 @@ import numpy as np
 def home():
     return render_template('layout.html', title="Test")
 
-# @app.route("/history")
-# def home():
-#     return render_template('history.html', title="Test")
+@app.route("/history")
+def history():
+    return render_template('history.html', title="Test")
+
+@app.route("/settings")
+def settings():
+    return render_template('settings.html', title="Test")

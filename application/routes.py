@@ -48,3 +48,7 @@ def login():
 @app.route("/settings")
 def settings():
     return render_template('settings.html', title="Settings")
+
+@app.route("/analysis",methods=['GET'])
+def analysis():
+    return render_template('analysis.html',title="Your Analysis")

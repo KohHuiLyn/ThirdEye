@@ -1,0 +1,154 @@
+<!-- Inherits from layout.html -->
+{% extends "layout.html" %}
+<!-- The block content replace the one encapsulated in  layout.html -->
+{% block content %}
+
+<section class="settings_section">
+  <div class="container">
+    <div class="profile">
+      <div class="row mx-auto justify-content-center">
+        <div class="col">
+          <div class="input-group mb-3"></div>
+          <h1 class="bi bi-gear mb-3"> Profile Settings</h1>
+        </div>
+        <!-- accordion starts here -->
+
+        <div class="accordion" id="accordionPanels">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#profile1" aria-expanded="true" aria-controls="profile1">
+                Profile Name
+              </button>
+            </h2>
+            <div id="profile1" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+              <div class="accordion-body">
+                <div class="row">
+                  <label for="staticName" class="col-sm-2 col-form-label">Profile Name</label>
+                  <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="staticName" value="John Tan">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#profile2" aria-expanded="false" aria-controls="profile2">
+                Email
+              </button>
+            </h2>
+            <div id="profile2" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
+              <div class="accordion-body">
+                <div class="row">
+                  <label for="staticEmail" class="col-sm-2 col-form-label">Email</label>
+                  <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="staticEmail"
+                      value="JohnTan@gmail.com">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#profile3" aria-expanded="false" aria-controls="profile3">
+                Change Password
+              </button>
+            </h2>
+            <div id="profile3" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingThree">
+              <div class="accordion-body">
+                <div class="row">
+                  <div class="col-sm-2">
+                    <!-- <label for="staticPassword" class="visually-hidden">Email</label> -->
+                    <!-- <input type="text" readonly class="form-control-plaintext" id="staticPassword" value="Password"> -->
+                    <label for="staticName" class="col-form-label">Change Password</label>
+                  </div>
+                  <div class="col-auto">
+                    <input type="password" class="form-control" id="inputPassword" placeholder="Password">
+                  </div>
+                  <div class="col-auto">
+                    <label for="inputPassword2" class="visually-hidden">Confirm Password</label>
+                    <input type="password" class="form-control" id="inputPassword2" placeholder="Confirm Password">
+                  </div>
+                  <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-success mb-3">Change Password</button>
+                  </div>
+                  <!-- </form> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="model_settings">
+      <div class="row mx-auto justify-content-center">
+        <div class="col">
+          <div class="input-group mb-3"></div>
+          <h1 class="bi bi-file-code mb-3"> Model Settings</h1>
+        </div>
+
+        <div class="accordion" id="accordionPanels2">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#model1" aria-expanded="true" aria-controls="model1">
+                Back Angle Parameters
+              </button>
+            </h2>
+            <div id="model1" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+              <div class="accordion-body">
+                <div class="row">
+                  <div class="input-group">
+                    <p class="col-12 mb-2">Bad back angle to be captured.</p>
+                    <span class="input-group-text">Back Angle</span>
+                    <input type="value" class="form-control" aria-label="" placeholder="40">
+                    <button class="btn btn-outline-success" type="button" id="back_angle">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#model2" aria-expanded="false" aria-controls="model2">
+                Feet Distance Parameters
+              </button>
+            </h2>
+            <div id="model2" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
+              <div class="accordion-body">
+                <div class="row">
+                  <div class="input-group">
+                    <p class="col-12 mb-2">Feet distance to be considered per step.</p>
+                    <span class="input-group-text">Feet Distance</span>
+                    <input type="value" class="form-control" aria-label="" placeholder="5">
+                    <button class="btn btn-outline-success" type="button" id="feet_distance">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#model3" aria-expanded="false" aria-controls="model3">
+                Third Parameter
+              </button>
+            </h2>
+            <div id="model3" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingThree">
+              <div class="accordion-body">
+                <strong>Undecided yet.</strong> 
+              </div>
+            </div>
+          </div> -->
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

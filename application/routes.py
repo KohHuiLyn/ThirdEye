@@ -44,3 +44,7 @@ def history():
 @app.route("/login",methods=['GET'])
 def login():
     return render_template('login.html',title="Login")
+    
+@app.route("/settings")
+def settings():
+    return render_template('settings.html', title="Test")

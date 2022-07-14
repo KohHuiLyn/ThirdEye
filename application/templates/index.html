@@ -58,28 +58,23 @@ Home
                             </p>
                         </fieldset>
                     </form>
-           </div>
-                <div class="col">
-                    <div id="upload">
-                        <input type='file' accept="video/mp4" id="imgInp" onchange="readURL(this);">
-                        <img src="" id="uploaded">
-                        <input type="button" class="btn-success" value="Analyse" onclick="predict_photo()">
-                    </div>
-                </div>
-                
+            </div>
+            <div class="col">
 
-            
-        </div
-        <p>{{form.videoMethod.data}}</p>
-        <div>
-        {% if method==0%}
-        <p>all we ever do</p>
-        {%elif method==1%}
-        <p>Does this work fam</p>
-        {%endif%}
-        </div>
+            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
+            <p><input type="file" name="file" accept="video/*"></p>
+            <p><input type="submit" value="Submit"></p>
+            </form>       
+                    
+        
     </div>
+{% if filename %}
+	<p>yo this shit works</p>
+{% endif %}
+  
     <script src="../static/js/Webcam.js"></script>
+    
+    
     
     
             

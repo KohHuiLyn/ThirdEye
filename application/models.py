@@ -10,18 +10,18 @@ class User(UserMixin,db.Model):
     username=db.Column(db.String,nullable=False)
     email=db.Column(db.String,unique=True,nullable=False)
     password=db.Column(db.String,nullable=False)
-    Videos=db.relationship('Video',backref='user')
+    # Videos=db.relationship('Video',backref='user')
 
 class Students(UserMixin,db.Model):
     __tablename__='Students'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name=db.Column(db.String,nullable=False)
-    Videos=db.relationship('Video',backref='Student')
+    # Videos=db.relationship('Video',backref='Student')
 class Video(UserMixin, db.Model):
     __tablename__='Videos'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
-    User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
-    Student_id=db.Column(db.Integer,db.ForeignKey('Students.id'))
+    # User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
+    # Student_id=db.Column(db.Integer,db.ForeignKey('Students.id'))
     video_path=db.Column(db.String)
     date=db.Column(db.DateTime,nullable=False)
     Event=db.Column(db.String,nullable=False) #where was this event

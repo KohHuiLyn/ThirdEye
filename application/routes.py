@@ -60,7 +60,7 @@ def upload_file():
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             print(DB_Filepath)
-            videoEntry=Video(User_id=1,Student_id=1,video_path=DB_Filepath,Event="random")
+            videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event="random")
             print(videoEntry)
             add_video(videoEntry)
             return redirect(url_for('video'))

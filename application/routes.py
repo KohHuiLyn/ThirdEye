@@ -19,7 +19,11 @@ import re
 import base64
 import tempfile
 import numpy as np
-
+import cv2
+import time
+import math as m
+import mediapipe as mp
+from application.mediapipePY import mpEstimate
 db.create_all()
 
 @app.route("/")
@@ -35,6 +39,11 @@ def add_video(new_video):
         db.session.rollback()
         flash(error,"danger")
 
+ 
+
+
+
+     
 @app.route('/index',methods=['GET','POST'])
 def video():
     form=VideoForm()
@@ -63,6 +72,8 @@ def upload_file():
             videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event="random")
             print(videoEntry)
             add_video(videoEntry)
+            
+            mpEstimate().main(DB_Filepath,"TESTEST")
             return redirect(url_for('video'))
     
 

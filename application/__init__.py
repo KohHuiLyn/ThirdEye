@@ -6,13 +6,14 @@ from flask_cors import CORS
 from flask_talisman import Talisman
 import os
 #create the Flask app
+
 app = Flask(__name__)
 Bootstrap(app)
-# CORS(app)
+CORS(app)
+
 # Wrap Flask app with Talisman
 # Talisman(app, content_security_policy=None)
 
 app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
 from application import routes
-

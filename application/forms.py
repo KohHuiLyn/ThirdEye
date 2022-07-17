@@ -16,4 +16,5 @@ class RegisterForm(FlaskForm):
 
 
 class VideoForm(FlaskForm):
+    title = StringField('title')
     videoMethod =SelectField(u"Method",choices=[(0,"Side view"),(1,"Back View")],validators=[InputRequired()])

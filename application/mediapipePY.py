@@ -191,23 +191,23 @@ class mpEstimate:
             # Write frames.
             if self.BackCurrentFrameNumber['Angle1']==None:
                 if steps==1:
-                    self.BackCurrentFrameNumber['Angle1']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.BackCurrentFrameNumber['Angle1']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
                     self.AngleAtStep.append(torso_inclination)
             if self.BackCurrentFrameNumber['Angle2']==None:
                 if steps==2:
-                    self.BackCurrentFrameNumber['Angle2']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.BackCurrentFrameNumber['Angle2']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
                     self.AngleAtStep.append(torso_inclination)
             if self.BackCurrentFrameNumber['Angle3']==None:
                 if steps==3:
-                    self.BackCurrentFrameNumber['Angle3']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.BackCurrentFrameNumber['Angle3']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
                     self.AngleAtStep.append(torso_inclination)
             if self.BackCurrentFrameNumber['Angle4']==None:
                 if steps==4:
-                    self.BackCurrentFrameNumber['Angle4']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.BackCurrentFrameNumber['Angle4']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
                     self.AngleAtStep.append(torso_inclination)
             if self.BackCurrentFrameNumber['Angle5']==None:
                 if steps==5:
-                    self.BackCurrentFrameNumber['Angle5']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.BackCurrentFrameNumber['Angle5']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
                     self.AngleAtStep.append(torso_inclination)
             
             video_output.write(image)
@@ -255,6 +255,8 @@ class mpEstimate:
                         # print("iv2", i)
                         
                         print(x)
-                        cv2.imwrite("./application/static/Analysedphoto/frame %s %d.jpg"%(name,x), frame)     # save frame as JPEG file      
+                        # REMOVED TEMPORARILY FOR PRESENTATION.
+                        #cv2.imwrite("./application/static/Analysedphoto/frame_%s_%d.jpg"%(name,x), frame)     # save frame as JPEG file   
+                        cv2.imwrite("./application/static/Analysedphoto/frame_%d.jpg"%(x), frame)     # save frame as JPEG file   
                         x=x+1
                         print('Read a new frame: ', ret)

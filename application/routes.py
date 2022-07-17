@@ -66,7 +66,6 @@ def add_analysedVideo(new_video):
 
 @app.route("/upload",methods=['GET','POST'])
 def upload_file():
-    
     if request.method=='POST':
         uploaded_file = request.files['file']
         filename = secure_filename(uploaded_file.filename)
@@ -101,13 +100,15 @@ def upload_file():
             print(int(backangles[0]))
             for i in range (0,len(backangles),1):
                 print("i ",i)
-                analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="./application/static/Analysedphoto/frame %s %d.jpg"%(name,i),Angle=int(backangles[i]))
+                # TO BE CHANGED TEMPORARILY
+                #analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%s_%d.jpg"%(name,i),Angle=int(backangles[i]))
+                analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d.jpg"%(i),Angle=int(backangles[i]))
                 print(analysisentry)
                 add_analysedVideo(analysisentry)
             # test=Analysis(Video_id=1,Video_filepath="EVERYTHING",Photo_filepath="SUCKS",Angle=2)
             # print(backangles[2])
             # add_analysedVideo(test)
-            return redirect(url_for('video'))
+            return redirect(url_for('analysis'))
     
 
     
@@ -126,4 +127,14 @@ def settings():
 
 @app.route("/analysis",methods=['GET'])
 def analysis():
-    return render_template('analysis.html',title="Your Analysis")
+    
+    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis())
+
+def get_latestAnalysis():
+    try:
+        analysis = Analysis.query.all()
+        return analysis
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0

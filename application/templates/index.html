@@ -22,55 +22,8 @@ Home
     .camerarow{
 
     }
-    #box{border:  solid }
-
-    .drag-area{
-    border: 2px dashed #fff;
-    height: 500px;
-    width: 700px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    }
-    .drag-area.active{
-    border: 2px solid #fff;
-    }
-    .drag-area .icon{
-    font-size: 100px;
-    color: #fff;
-    }
-    .drag-area header{
-    font-size: 30px;
-    font-weight: 500;
-    color: #fff;
-    }
-    .drag-area span{
-    font-size: 25px;
-    font-weight: 500;
-    color: #fff;
-    margin: 10px 0 15px 0;
-    }
-    .drag-area button{
-    padding: 10px 25px;
-    font-size: 20px;
-    font-weight: 500;
-    border: none;
-    outline: none;
-    background: #fff;
-    color: #5256ad;
-    border-radius: 5px;
-    cursor: pointer;
-    }
-    .drag-area img{
-    height: 100%;
-    width: 100%;
-    object-fit: cover;
-    border-radius: 5px;
-    }
     label {
-        font-size: 1.1em;
+      font-size: 1.1em;
     }
 </style>
 
@@ -89,31 +42,27 @@ Home
            <div class="col g-1"> <button class="cameras" id="download-video" download="test.mp4">Download Video</button></div>
         </div>
     </div> -->
-    <div class="rounded container-fluid bg-dark mt-5 p-5">
+    <div class="rounded container-fluid mt-5">
         <div class="row">
-            <div class="drag-area col-8">
-                <div class="icon"><i class="bi bi-upload"></i></div>
-                <header>Drag & Drop to Upload A Video</header>
-                <span>OR</span>
-                <button>Browse File</button>
-                <form name="frmMethod" method="POST" action="/upload">
-                <input type="file" name="file" accept="video/*"hidden>
-            </div>
-            <div class="col-4">
-                <div class="form-wrapper">
-                    
-
-                        <fieldset class="form-group text-light">
-                            <label for="Title" class="form-label pt-3">Title</label>
-                            {{ form.title(id="title",placeholder="Add your title", class="form-control") }}                  
-                            <label for="videoMethod" class="form-label pt-3">Choose an Analysis Type</label>
-                            {{form.videoMethod(id="videoMethod", class="form-control")}}
-                            {% for error in form.videoMethod.errors %}
-                            <span class="error-message">{{ error }}</span>
-                            {% endfor %}
-                        </fieldset>
-                    </form>
-            </div>
+          <div class="col-6 bg-dark mx-auto p-5 rounded">
+            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
+              <fieldset class="form-group text-light">
+                <div class="mx-auto text-center pb-2"><i class="bi bi-cloud-upload text-light pb-3" style="font-size: 7em"></i></div>
+                <label for="Upload" class="form-label pt-3">Upload Video</label>
+                <br/>
+                <input id="Upload" type="file" name="file" accept="video/*">
+                <br/>
+                <label for="Title" class="form-label pt-3">Title</label>
+                {{ form.title(id="title",placeholder="Add your title", class="form-control") }}                  
+                <label for="videoMethod" class="form-label pt-3">Choose an Analysis Type</label>
+                {{form.videoMethod(id="videoMethod", class="form-control")}}
+                {% for error in form.videoMethod.errors %}
+                <span class="error-message">{{ error }}</span>
+                {% endfor %}
+              </fieldset>
+              <button type="submit" value="Submit" class="btn btn-light">Submit</button>
+            </form>
+          </div>
         </div>
     </div>
     <!-- Delete later -->
@@ -121,8 +70,7 @@ Home
 
             <div class="col">
             <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
-            <p class="ml-2 mb-2"><input type="file" name="file" accept="video/*"></p>
-            <p><input type="submit" value="Submit"></p>
+
             </form>       
                     
         

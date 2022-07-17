@@ -20,7 +20,7 @@
 								    height="264"
 								    poster="{{url_for('static', filename='images/bg.jpeg') }}"
 								  >
-								    <source src="{{url_for('static', filename='videos/NICe.mp4') }}" type="video/mp4" />
+								    <source src="{{url_for('static', filename='videos/NICe.mp4') }}" type="video/mp4"  />
 								    <source src="{{url_for('static', filename='videos/NICe.ogg') }}" type="video/ogg" />
 								</video>
 							</div><!--vid-pr end-->
@@ -74,7 +74,13 @@
 
 	<div class="container">
 		<h3 class="pb-3" style="font-size:30px">Analysis</h3>
-		<div id="accordion">
+	{% for anal in analysis %}
+			<p>Back Angle: {{anal.Angle}}</p>
+			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="ur mother"/>
+	{% endfor %}
+
+		
+		<!-- <div id="accordion">
 			<div class="card">
 			  <div class="card-header" id="headingThree">
 				<h5 class="mb-0">
@@ -87,7 +93,7 @@
 				<div class="card-body">
 						<div class="row">
 							<div class="col-md-6 text-center">
-								<img src="{{url_for('static', filename='images/bg.jpeg') }}" alt="" class="w-75">
+								<img src="{{url_for('static', filename='Analysedphoto/{{ sspath|safe}} 0.jpg') }}" alt="" class="w-75">
 							</div>
 							<div class="col-md-6">
 								<h3>Time:</h3>
@@ -122,8 +128,8 @@
 						  </div>
 				  </div>
 				</div>
-			  </div>
-		  </div>
+			</div>
+		</div> -->
 		  
 		
 	</div>
@@ -177,9 +183,9 @@
 
 </div><!--wrapper end-->
 
-<script src="{{ url_for('static',filename='js/jquery.min.js')}}"></script>
+<!-- <script src="{{ url_for('static',filename='js/jquery.min.js')}}"></script>
 <script src="{{ url_for('static',filename='js/popper.js')}}"></script>
 <script src="{{ url_for('static',filename='js/bootstrap.min.js')}}"></script>
 <script src="{{ url_for('static',filename='js/video.js')}}"></script>
-<script src="{{ url_for('static',filename='js/script.js')}}"></script>
+<script src="{{ url_for('static',filename='js/script.js')}}"></script> -->
 {% endblock %}

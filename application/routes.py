@@ -126,4 +126,4 @@ def settings():
 
 @app.route("/analysis",methods=['GET'])
 def analysis():
-    return render_template('analysis.html', title="Analysis")
+    return render_template('analysis.html',title="Your Analysis")

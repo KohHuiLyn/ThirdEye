@@ -2,7 +2,7 @@ import cv2
 import time
 import math as m
 import mediapipe as mp
-import datetime
+from datetime import datetime
 import pandas as pd
 import os
 class mpEstimate:
@@ -23,8 +23,8 @@ class mpEstimate:
     #Using Mediapipe Pose
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
-    currentframenumber=dict.fromkeys(["Angle1","Angle2","Angle3","Angle4","Angle5","Release"])
-    
+    BackCurrentFrameNumber=dict.fromkeys(["Angle1","Angle2","Angle3","Angle4","Angle5"])
+    AngleAtStep=[]
     
         
     # Find Distance between 2 points
@@ -48,7 +48,7 @@ class mpEstimate:
 
     def main(self,file_path,name):
         # Choose which video to use
-        # ((For webcam input replace file name with 0))
+        # (For webcam input replace file name with 0)
         file_path = file_path
         cap = cv2.VideoCapture(file_path)
 
@@ -58,10 +58,11 @@ class mpEstimate:
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        name=name
+        print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        video_output = cv2.VideoWriter("./application/analysedvideo/{name}.mp4", fourcc, fps, frame_size)
+        savingpath="./application/analysedvideo/{}.mp4".format(name)
+        video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
         steps = 0
         stage = None
@@ -148,42 +149,19 @@ class mpEstimate:
                     stage = "down"
                 elif feetDist < maxFeetLength:
                     stage = "up"
-
-            # Timing Component
-            if feetDist > 2*maxFeetLength:
-                currentFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                pre = currentFrame - 4
-                # Calculate Velocity with this frame and 4 frames before
-                velo = abs(((l_heel_x - self.feetInfo["LH_X"][pre])/(currentFrame-pre)))
-                if velo == 0 and access == 1:
-                    access = 0
-                    ball_train_feet_dis = self.findX(r_knee_x, r_wrist_x)
-                    ball_slide_feet_dis = self.findX(l_knee_x, r_wrist_x)
-                    self.currentframenumber['Release']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
-                    if ball_train_feet_dis < 0:
-                        ball_release = "Late"
-                    elif ball_train_feet_dis > 0 and ball_slide_feet_dis < 0:
-                        ball_release = "Traditional"
-                    elif ball_slide_feet_dis > 0:
-                        ball_release = "Early"
         
-            # Append to array
-            feetStuff = {"Frame": cap.get(cv2.CAP_PROP_POS_FRAMES)+1, "LH_X":l_heel_x,"LI_X":l_ind_x,"Velocity": velo}
-            self.feetInfo = self.feetInfo.append(feetStuff, ignore_index=True)
-
-            # Calculate torso and neck angles
-            neck_inclination = self.findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
+            # Calculate torso angle
             torso_inclination = self.findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
 
             #============ Annotations onto video ============
-            # # Draw landmarks
-            # cv2.circle(image, (l_shldr_x, l_shldr_y), 7, yellow, -1)
-            # cv2.circle(image, (l_ear_x, l_ear_y), 7, yellow, -1)
-            # cv2.circle(image, (l_shldr_x, l_shldr_y - 100), 7, yellow, -1)
-            # # Right shoulder is pink ball
-            # cv2.circle(image, (r_shldr_x, r_shldr_y), 7, pink, -1)
-            # cv2.circle(image, (l_hip_x, l_hip_y), 7, yellow, -1)
-            # cv2.circle(image, (l_hip_x, l_hip_y - 100), 7, yellow, -1)
+            # Draw landmarks
+            cv2.circle(image, (l_shldr_x, l_shldr_y), 7, self.yellow, -1)
+            cv2.circle(image, (l_ear_x, l_ear_y), 7, self.yellow, -1)
+            cv2.circle(image, (l_shldr_x, l_shldr_y - 100), 7, self.yellow, -1)
+            # Right shoulder is pink ball
+            cv2.circle(image, (r_shldr_x, r_shldr_y), 7, self.pink, -1)
+            cv2.circle(image, (l_hip_x, l_hip_y), 7, self.yellow, -1)
+            cv2.circle(image, (l_hip_x, l_hip_y - 100), 7, self.yellow, -1)
 
             # Display the skeleton
             mp_drawing.draw_landmarks(
@@ -193,51 +171,56 @@ class mpEstimate:
                 
                 landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
             # Text for Neck/Torso Angle, Feet distance & Steps
-            # angle_text_string = 'Neck : ' + str(int(neck_inclination)) + '  Torso : ' + str(int(torso_inclination)) + ' Feet distance: '+ str(int(feetDist)) + ' Steps: '+ str(int(steps))  + 'Release: '+ str(ball_release)
-            angle_text_string = 'Frame: '+str(cap.get(cv2.CAP_PROP_POS_FRAMES)) +' Feet distance: '+ str(int(feetDist)) + ' Steps: '+ str(int(steps))  + 'Release: '+ str(ball_release) + 'Velocity'+ str(velo)
+            angle_text_string = 'Back Angle : ' + str(int(torso_inclination)) + 'deg Feet distance: '+ str(int(feetDist)) + ' Steps: '+ str(int(steps))  
             cv2.putText(image, angle_text_string, (10, 50), self.font, 0.8, self.dark_blue, 4)
 
-            # # Display angles on the annotation
-            # cv2.putText(image, str(int(neck_inclination)), (l_shldr_x + 10, l_shldr_y), font, 1.2, pink, 2)
-            # cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), font, 1.2, pink, 2)
+            # Display angles on the annotation
+            cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), self.font, 1.2, self.pink, 2)
 
-            # # Join landmarks
-            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), green, 4)
-            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), green, 4)
-            # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), green, 4)
-            # cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), green, 4)
+            # Join landmarks
+            cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), self.green, 4)
+            cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), self.green, 4)
+            cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), self.green, 4)
+            cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), self.green, 4)
             # if torso_inclination >= 43:
             #     detectedFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            #     currentframenumber.append(detectedFrame-3)
+            #     BackCurrentFrameNumber.append(detectedFrame-3)
             # # Write frames.
             # video_output.write(image)
 
             # Write frames.
-            if self.currentframenumber['Angle1']==None:
+            if self.BackCurrentFrameNumber['Angle1']==None:
                 if steps==1:
-                    self.currentframenumber['Angle1']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
-            if self.currentframenumber['Angle2']==None:
+                    self.BackCurrentFrameNumber['Angle1']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.AngleAtStep.append(torso_inclination)
+            if self.BackCurrentFrameNumber['Angle2']==None:
                 if steps==2:
-                    self.currentframenumber['Angle2']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
-            if self.currentframenumber['Angle3']==None:
+                    self.BackCurrentFrameNumber['Angle2']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.AngleAtStep.append(torso_inclination)
+            if self.BackCurrentFrameNumber['Angle3']==None:
                 if steps==3:
-                    self.currentframenumber['Angle3']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
-            if self.currentframenumber['Angle4']==None:
+                    self.BackCurrentFrameNumber['Angle3']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.AngleAtStep.append(torso_inclination)
+            if self.BackCurrentFrameNumber['Angle4']==None:
                 if steps==4:
-                    self.currentframenumber['Angle4']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
-            if self.currentframenumber['Angle5']==None:
+                    self.BackCurrentFrameNumber['Angle4']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.AngleAtStep.append(torso_inclination)
+            if self.BackCurrentFrameNumber['Angle5']==None:
                 if steps==5:
-                    self.currentframenumber['Angle5']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
+                    self.BackCurrentFrameNumber['Angle5']=[cap.get(cv2.CAP_PROP_POS_FRAMES)+1]
+                    self.AngleAtStep.append(torso_inclination)
             
-        video_output.write(image)
+            video_output.write(image)
         
         print('Video is done!')
         cap.release()
         video_output.release()
+        return self.AngleAtStep
         
         
-    def screenshot(self):
-        path ='./application/Analysedphoto'
+    def screenshot(self,file_path,name):
+        print("Screenshot Started")
+        path ='./application/static/Analysedphoto'
         isExist = os.path.exists(path)
 
         if not isExist:
@@ -245,25 +228,33 @@ class mpEstimate:
             os.makedirs(path)
             print("Analysedphoto folder is created!")
 
-            cap=cv2.VideoCapture('don9.mp4')
-            x=0
-            bool=True
-
-            frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
-            while bool:
-                for i in range(0,frameLen,1):
-                    if x>=len(self.currentframenumber):
-                        bool=False
-                        break
-                    # print("iv1 ", i)
-                    # print(x<len(currentframenumber))
-                    ret, frame= cap.read()
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-                    for val in self.currentframenumber.values():       
-                        if i == val[0] :
-                            print(cap.get(cv2.CAP_PROP_POS_FRAMES))
-                            # print("iv2", i)
-                            x=x+1
-                            print(x)
-                            cv2.imwrite("./application/Analysedphoto/frame%d.jpg" % i, frame)     # save frame as JPEG file      
-                            print('Read a new frame: ', ret)
+        cap=cv2.VideoCapture(file_path)
+        x=0
+        bool=True
+        print(self.BackCurrentFrameNumber.values())
+        #('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")
+        date=datetime.utcnow()
+        print(date)
+        print(name)
+        frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
+        print(frameLen)
+        while bool:
+            
+            for i in range(0,frameLen,1):
+                if x>=len(self.BackCurrentFrameNumber):
+                    bool=False
+                    break
+                # print("iv1 ", i)
+                # print(x<len(BackCurrentFrameNumber))
+                ret, frame= cap.read()
+                
+                cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                for val in self.BackCurrentFrameNumber.values():       
+                    if i == val[0] :
+                        print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                        # print("iv2", i)
+                        
+                        print(x)
+                        cv2.imwrite("./application/static/Analysedphoto/frame %s %d.jpg"%(name,x), frame)     # save frame as JPEG file      
+                        x=x+1
+                        print('Read a new frame: ', ret)

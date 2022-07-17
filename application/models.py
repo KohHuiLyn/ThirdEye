@@ -31,6 +31,9 @@ class Analysis(UserMixin,db.Model):
     __tablename__='Analysis'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
     Video_id=db.Column(db.Integer,db.ForeignKey('Videos.id'))
-    Angle=db.Column(db.Integer,nullable=False)
-    Ball_release=db.Column(db.String,nullable=False)
-    Error_Count=db.Column(db.Integer)
+    Video_filepath=db.Column(db.String,nullable=False)
+    Photo_filepath=db.Column(db.String,nullable=False)
+    Angle=db.Column(db.Integer, nullable=True)
+    Ball_release=db.Column(db.String,nullable=True)
+    Error_Count=db.Column(db.Integer,nullable=True) 
+    

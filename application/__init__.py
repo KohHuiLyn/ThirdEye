@@ -17,4 +17,3 @@ CORS(app)
 app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
 from application import routes
-

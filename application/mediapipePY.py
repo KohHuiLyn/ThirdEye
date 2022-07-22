@@ -61,7 +61,7 @@ class mpEstimate:
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        savingpath="./application/analysedvideo/{}.mp4".format(name)
+        savingpath="./application/static/analysedvideo/{}.mp4".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
         steps = 0
@@ -227,19 +227,18 @@ class mpEstimate:
         # Create a new directory because it does not exist 
             os.makedirs(path)
             print("Analysedphoto folder is created!")
-
+        print(file_path)
         cap=cv2.VideoCapture(file_path)
         x=0
         bool=True
         print(self.BackCurrentFrameNumber.values())
         #('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")
-        date=datetime.utcnow()
-        print(date)
-        print(name)
+        # date=datetime.utcnow()
+        # print(date)
+        # print(name)
         frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
         print(frameLen)
-        while bool:
-            
+        while bool:  
             for i in range(0,frameLen,1):
                 if x>=len(self.BackCurrentFrameNumber):
                     bool=False
@@ -257,6 +256,6 @@ class mpEstimate:
                         print(x)
                         # REMOVED TEMPORARILY FOR PRESENTATION.
                         #cv2.imwrite("./application/static/Analysedphoto/frame_%s_%d.jpg"%(name,x), frame)     # save frame as JPEG file   
-                        cv2.imwrite("./application/static/Analysedphoto/frame_%d.jpg"%(x), frame)     # save frame as JPEG file   
+                        cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)     # save frame as JPEG file   
                         x=x+1
                         print('Read a new frame: ', ret)

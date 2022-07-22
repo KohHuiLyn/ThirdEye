@@ -29,9 +29,20 @@ import mediapipe as mp
 from application.mediapipePY import mpEstimate
 db.create_all()
 
-# @app.route("/")
-# def home():
-#     return render_template('layout.html', title="Test")
+#Creating of essential folders in static
+analysedpath ='./application/static/analysedvideo'
+AnalysedisExist = os.path.exists(analysedpath)
+rawpath ='./application/static/rawvideo'
+RawisExist = os.path.exists(rawpath)
+if not AnalysedisExist:
+    # Create a new directory because it does not exist 
+    os.makedirs(analysedpath)
+    print("Analysedvideo folder is created!")
+if not RawisExist:
+    # Create a new directory because it does not exist 
+    os.makedirs(rawpath)
+    print("rawvideo folder is created!")
+
 
 @app.route('/',methods=['GET','POST'])
 def video():
@@ -41,74 +52,54 @@ def video():
     return render_template('index.html',form=form,title="Home Page")
 
 
-def add_video(new_video):
+#Function for INSERT into database
+def add_entry(new_entry):
     try:
-        db.session.add(new_video)
+        db.session.add(new_entry)
         db.session.commit()
         print("success")
-        return new_video.id
-    except Exception as error:
-        db.session.rollback()
-        flash(error,"danger")
-
- 
-def add_analysedVideo(new_video):
-    try:
-        db.session.add(new_video)
-        db.session.commit()
-        print("success")
-        return new_video.id
+        return new_entry.id
     except Exception as error:
         db.session.rollback()
         flash(error,"danger")
 
  
 
+
+ 
+#Handling File upload, and mediapipe analysis
 @app.route("/upload",methods=['GET','POST'])
 def upload_file():
     if request.method=='POST':
-        uploaded_file = request.files['file']
+        uploaded_file = request.files['file']      
         filename = secure_filename(uploaded_file.filename)
-        
-        
-        if uploaded_file.filename != '':
-            # uploaded_file.save(uploaded_file.filename)
-            #NEED TO ADD A WAY TO ENTER NAME FOR THE VIDEO THEN CONCAT WITH FILENAME
-            uploaded_file.save(os.path.join('./application/rawvideo/',filename))
-            DB_Filepath=os.path.join('./application/rawvideo/',filename)
+        if uploaded_file.filename != '': 
+            uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
+            DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
-            print(DB_Filepath)
+            print("filepath ", DB_Filepath)
             videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event="random")
             # Adding into database
-            add_video(videoEntry)
-            name="Testing "+str(datetime.now().strftime("%d-%m-%Y"))
+            video_id=add_entry(videoEntry)
+            name="Testing_"+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             
             backangles=mpEstimate().main(DB_Filepath,name)#name supposed to be a variable
-            print(backangles)
+            print("backangles ", backangles)
             
-            mpEstimate().screenshot('./application/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
+            mpEstimate().screenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
            
             # entries = Entry.query.filter_by(user_id=userid)
-            
-            
-            sql=text("SELECT Videos.id FROM Videos ORDER BY id DESC LIMIT 1")
-            UsefulID=db.engine.execute(sql)
-            names=[row[0] for row in UsefulID]
-            print(names[0])            
-            print(len(backangles))
-            print(int(backangles[0]))
+            print("length of backangles", len(backangles) )
             for i in range (0,len(backangles),1):
-                print("i ",i)
+                
                 # TO BE CHANGED TEMPORARILY
                 #analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%s_%d.jpg"%(name,i),Angle=int(backangles[i]))
-                analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d.jpg"%(i),Angle=int(backangles[i]))
-                print(analysisentry)
-                add_analysedVideo(analysisentry)
-            # test=Analysis(Video_id=1,Video_filepath="EVERYTHING",Photo_filepath="SUCKS",Angle=2)
-            # print(backangles[2])
-            # add_analysedVideo(test)
-            return redirect(url_for('analysis'))
+                analysisentry=Analysis(Video_id=video_id,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                
+                add_entry(analysisentry)
+            
+            return redirect(url_for('analysis',videoid=video_id))
     
 
     
@@ -125,14 +116,16 @@ def login():
 def settings():
     return render_template('settings.html', title="Settings")
 
-@app.route("/analysis",methods=['GET'])
-def analysis():
+@app.route("/analysis/<videoid>",methods=['GET'])
+def analysis(videoid):
     
-    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis())
+    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))
 
-def get_latestAnalysis():
+def get_latestAnalysis(video_id):
     try:
-        analysis = Analysis.query.all()
+        # analysis = Analysis.query.all()
+        analysis=Analysis.query.filter_by(Video_id=video_id).all()
+        print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:
         db.session.rollback()

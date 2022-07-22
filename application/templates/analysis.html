@@ -20,8 +20,8 @@
 								    height="264"
 								    poster="{{url_for('static', filename='images/bg.jpeg') }}"
 								  >
-								    <source src="{{url_for('static', filename='videos/NICe.mp4') }}" type="video/mp4"  />
-								    <source src="{{url_for('static', filename='videos/NICe.ogg') }}" type="video/ogg" />
+								    <source src="{{url_for('static', filename=''+analysis[0].Video_filepath) }}" type="video/mp4"  />
+								    
 								</video>
 							</div><!--vid-pr end-->
 							<div class="vid-info">
@@ -75,8 +75,8 @@
 	<div class="container">
 		<h3 class="pb-3" style="font-size:30px">Analysis</h3>
 	{% for anal in analysis %}
-			<p>Back Angle: {{anal.Angle}}</p>
-			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="ur mother"/>
+			<h3>Back Angle: {{anal.Angle}}</h3>
+			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="SSIMAGE"/>
 	{% endfor %}
 
 		

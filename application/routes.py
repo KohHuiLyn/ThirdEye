@@ -116,7 +116,7 @@ def login():
 def settings():
     return render_template('settings.html', title="Settings")
 
-@app.route("/analysis/<videoid>",methods=['GET'])
+@app.route("/analysis/<videoid>",methods=['GET','POST'])
 def analysis(videoid):
     
     return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))
@@ -125,7 +125,7 @@ def get_latestAnalysis(video_id):
     try:
         # analysis = Analysis.query.all()
         analysis=Analysis.query.filter_by(Video_id=video_id).all()
-        print(analysis[0].Video_filepath)
+        # print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:
         db.session.rollback()

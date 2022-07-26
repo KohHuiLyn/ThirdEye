@@ -53,16 +53,20 @@ Home
                 <input id="Upload" type="file" name="file" accept="video/*">
                 <br/>
                 <label for="Title" class="form-label pt-3">Title</label>
-                {{ form.title(id="title",placeholder="Add your title", class="form-control") }}                  
+                {{ form.title(id="title",placeholder="Add your title", class="form-control") }}       
+                <label for="Event" class="form-label pt-3">Event</label> 
+                {{form.event(id="event",placeholder="Add the event", class="form-control")}}      
                 <label for="videoMethod" class="form-label pt-3">Choose an Analysis Type</label>
                 {{form.videoMethod(id="videoMethod", class="form-control")}}
                 {% for error in form.videoMethod.errors %}
                 <span class="error-message">{{ error }}</span>
                 {% endfor %}
+                <label for="submit" class="form-label pt-3"></label>
+                {{ form.submit(class_='form-control') }}
               </fieldset>
-              <button type="submit" value="Submit" class="btn btn-light">Submit</button>
+              
             </form>
-          </div>
+          </div>  
         </div>
     </div>
     <!-- Delete later -->
@@ -75,9 +79,6 @@ Home
                     
         
     </div>
-{% if filename %}
-	<p>yo this shit works</p>
-{% endif %}
   
     <script src="../static/js/Webcam.js"></script>
     <script src="{{ url_for('static',filename='js/upload.js')}}"></script>

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField,StringField,PasswordField
+from wtforms import SelectField,StringField,PasswordField,SubmitField
 from wtforms.validators import InputRequired, Email, Length
 
 
@@ -16,5 +16,7 @@ class RegisterForm(FlaskForm):
 
 
 class VideoForm(FlaskForm):
-    title = StringField('title')
+    title = StringField('Title')
     videoMethod =SelectField(u"Method",choices=[(0,"Side view"),(1,"Back View")],validators=[InputRequired()])
+    event= StringField('Event')
+    submit = SubmitField("Upload")

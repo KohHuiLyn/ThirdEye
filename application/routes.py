@@ -47,7 +47,6 @@ if not RawisExist:
 @app.route('/',methods=['GET','POST'])
 def video():
     form=VideoForm()
-    video_method=form.videoMethod.data
     # files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('index.html',form=form,title="Home Page")
 
@@ -69,20 +68,26 @@ def add_entry(new_entry):
  
 #Handling File upload, and mediapipe analysis
 @app.route("/upload",methods=['GET','POST'])
-def upload_file():
+def upload_file( ):
     if request.method=='POST':
+        form=VideoForm()
+        
         uploaded_file = request.files['file']      
         filename = secure_filename(uploaded_file.filename)
         if uploaded_file.filename != '': 
+            title=form.title.data
+            print(title)
+            videoMethod=form.videoMethod.data
+            event=form.event.data
             uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             print("filepath ", DB_Filepath)
-            videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event="random")
+            videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
             video_id=add_entry(videoEntry)
-            name="Testing_"+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
+            name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             
             backangles=mpEstimate().main(DB_Filepath,name)#name supposed to be a variable
             print("backangles ", backangles)
@@ -106,7 +111,19 @@ def upload_file():
 
 @app.route("/history",methods=['GET'])
 def history():
-    return render_template('history.html',title="Your History")
+    
+    return render_template('history.html',title="Your History", history=gethistory())
+
+def gethistory():
+    try:
+        
+        video=Video.query.all()
+        
+        return video
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
 
 @app.route("/login",methods=['GET'])
 def login():

@@ -2,15 +2,15 @@ import email
 from unicodedata import name
 from webbrowser import get
 from application import app,db
-from application.models import User,Students, Video, Analysis 
+from application.models import User,Students, Video, Analysis, Parameters
 from datetime import datetime
-from application.forms import  VideoForm
+from application.forms import  Back_Form, VideoForm, Feet_Form
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 # from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for 
 from flask_cors import CORS, cross_origin
-from sqlalchemy import text
+from sqlalchemy import text, func
 import pathlib, os
 import requests
 import keras.models
@@ -21,13 +21,20 @@ import re
 import base64
 import tempfile
 import numpy as np
-import sqlite3
+import sqlite3 as sql
 import cv2
 import time
 import math as m
 import mediapipe as mp
 from application.mediapipePY import mpEstimate
 db.create_all()
+
+# Creates a default database for parameters
+rows = db.session.query(func.count(Parameters.id)).scalar()
+if (rows < 1):
+    param_row = Parameters(Back_angle=45,Feet_length=50)
+    db.session.add(param_row)
+    db.session.commit()
 
 #Creating of essential folders in static
 analysedpath ='./application/static/analysedvideo'
@@ -42,7 +49,6 @@ if not RawisExist:
     # Create a new directory because it does not exist 
     os.makedirs(rawpath)
     print("rawvideo folder is created!")
-
 
 @app.route('/',methods=['GET','POST'])
 def video():
@@ -130,8 +136,64 @@ def login():
     return render_template('login.html',title="Login")
     
 @app.route("/settings",methods=['GET'])
-def settings():
-    return render_template('settings.html', title="Settings")
+def settings():  
+    back_form = Back_Form()
+    feet_form = Feet_Form()
+    update = Parameters.query.get_or_404(1)
+    db_backangle = update.Back_angle
+    db_feetlength = update.Feet_length
+    return render_template('settings.html', title="Settings",
+                                             back_form = back_form, 
+                                             feet_form = feet_form, 
+                                             db_backangle = db_backangle, 
+                                             db_feetlength = db_feetlength)
+
+@app.route('/edit_back', methods=['GET','POST'])
+def back_param():
+    back_form = Back_Form() 
+    feet_form = Feet_Form()
+    update = Parameters.query.get_or_404(1)
+    if request.method == 'POST': 
+        update.Back_angle = request.form['back_angle']
+        try:
+            db.session.commit()
+            flash("Updated Successfully")
+            return render_template("settings.html",
+                                    back_form=back_form, feet_form = feet_form,
+                                    update=update)
+        except:
+            flash("Error!")
+            return render_template("settings.html",
+                                    back_form=back_form,feet_form = feet_form,
+                                    update=update)
+    else:
+        return render_template("settings.html",
+                                    back_form=back_form,feet_form = feet_form,
+                                    update=update)
+                                    
+
+@app.route('/edit_feet', methods=['GET','POST'])
+def feet_param():
+    feet_form = Feet_Form() 
+    back_form = Back_Form() 
+    update = Parameters.query.get_or_404(1)
+    if request.method == 'POST': 
+        update.Feet_length = request.form['feet_length']
+        try:
+            db.session.commit()
+            flash("Updated Successfully")
+            return render_template("settings.html",
+                                    feet_form=feet_form, back_form = back_form,
+                                    update=update)
+        except:
+            flash("Error!")
+            return render_template("settings.html",
+                                    feet_form=feet_form, back_form = back_form,
+                                    update=update)
+    else:
+        return render_template("settings.html",
+                                    feet_form=feet_form, back_form = back_form,
+                                    update=update)
 
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
 def analysis(videoid):

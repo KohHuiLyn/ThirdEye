@@ -4,7 +4,7 @@ from webbrowser import get
 
 from matplotlib.image import thumbnail
 from application import app,db
-from application.models import User,Students, RawVideo, Analysis, Parameters
+from application.models import User,Students, RawVideo, Analysis, Parameters, Thumbnail
 from datetime import datetime
 from application.forms import  Back_Form, VideoForm, Feet_Form
 from werkzeug.security import generate_password_hash, check_password_hash

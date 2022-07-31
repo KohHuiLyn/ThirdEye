@@ -10,6 +10,10 @@
 			<div class="row">
 					<div class="mn-vid-sc single_video">
 						<div class="vid-1">
+							<h2>
+								{{analysis[0].Name}}
+							</h2>
+							<br>
 							<div style = "width:100%">
 								<video
 								    id="my-video"
@@ -23,9 +27,10 @@
 								    
 								</video>
 							</div><!--vid-pr end-->
-							<div class="vid-info">
+							<!-- <div class="vid-info">
 								{{analysis[0].Name}}
-							</div><!--vid-info end-->
+							</div> -->
+							<!--vid-info end-->
 						</div><!--vid-1 end-->
 						<div class="abt-mk">
 							<div class="info-pr-sec">
@@ -41,7 +46,7 @@
 								<div class="clearfix"></div>
 							</div>
 							<div class="clearfix"></div>
-							<div class="about-ch-sec">
+							<div class="about-ch-sec p-3 mb-2 bg-light text-dark" >
 								<div class="abt-rw">
 									<h4>Student:</h4>
 									<ul>
@@ -71,17 +76,21 @@
 		</div>
 	</section><!--mn-sec end-->
 
-	<div class="container">
-		<h3 class="pb-3" style="font-size:30px">Analysis</h3>
+	<div class="container p-3 mb-2 bg-light text-dark">
+		<h3 class="pb-3" style="font-size:30px">Model Analysis Result</h3>
 	{%if analysis|length ==5%}
 		{% for anal in analysis %}
-			<h3>Back Angle: {{anal.Angle}}</h3>
+			<h4>Back Angle: {{anal.Angle}}</h4>
 			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="SSIMAGE"/>
 		{% endfor %}
 	{%elif analysis|length==1%}
-		<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + analysis[0].Photo_filepath) }}" alt="SSIMAGE"/>
-		<h3>Analysis: {{analysis[0].Ball_release}}</h3>
-
+		<div class="row">
+			<img class="w-50 h-50 pb-2 col-md-6"src="{{url_for('static', filename='' + analysis[0].Photo_filepath) }}" alt="SSIMAGE"/>
+			<h4 class="col-md-6">Ball Release Type: <br> 
+				<small class="text-muted">{{analysis[0].Ball_release}}</small>
+			</h4>
+		</div>
+		
 	{% endif %}
 
 		
@@ -149,7 +158,7 @@
 					<img src="{{url_for('static', filename='images/bg.jpeg') }}" alt="">
 				</div>
 				<form>
-					<input type="text" placeholder="Add a public comment">
+					<input type="text" placeholder="Add Your Recommendation">
 					<button type="submit">Comment</button>
 				</form>
 				<div class="clearfix"></div>

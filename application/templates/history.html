@@ -2,29 +2,87 @@
 {% extends "layout.html" %}
 <!-- The block content replace the one encapsulated in  layout.html -->
 {% block content %}
-<script>
-    table, th, td {
-        border: 1px solid black;
-      }
-</script>
-<div class="wrapper">
-    <div class="container-fluid mt-5">
-        <table class="center"  style="width:100%">
-            <tr>
-                <th>ID</th>
-                <th>Video Name</th>
-                
-                <th>Date</th>
-            </tr>
-        {%for hist in history%}
-            <tr>
-                <td>{{hist.id}}</td>
-                <td><a href="/analysis/{{hist.RawVideoid}}"><img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + hist.thumb_path) }}" alt="SSIMAGE"/></a></td>
-                <td>{{hist.Date}}</td>
-            </tr>   
-        {% endfor %}
-        </table>
-    </div>
-</div>    
 
+<section class="videso_section">
+    <div class="videso_tb_details">
+        <div class="container">
+            <div class="vidz_sec">
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-8">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control input-text" placeholder="Search Videos" >
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-dark" type="button"><i class="bi bi-search"></i></button>
+                            </div>
+                        </div>
+                    </div>   
+                    <div class="col-md-2 col-4 pt-3"><a data-toggle="collapse" href="#collapseExample"  aria-expanded="false" aria-controls="collapseExample" class="align-middle "title=""><i class="icon-sort_by"></i>Sort By</a></div>
+                    <div class="collapse" id="collapseExample">
+                        <div class="card card-body mb-3">
+                          <div class="row">
+                            <!-- Replace list with jinja (except date) -->
+                            <div class="col-3">
+                                <h3>Time</h3>
+                                <hr>
+                                <ul>
+                                    <li><a href="#" class="text-decoration-none">Today</a></li>
+                                    <li><a href="#" class="text-decoration-none">This Week</a></li>
+                                    <li><a href="#" class="text-decoration-none">This Month</a></li>
+                                    <li><a href="#" class="text-decoration-none">This Year</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-3">
+                                <h3>Student</h3>
+                                <hr>
+                                <ul>
+                                    <li><a href="#" class="text-decoration-none">Student Name 1</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-3">
+                                <h3>Location</h3>
+                                <hr>
+                                <ul>
+                                    <li><a href="#" class="text-decoration-none">Planet Bowl</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-3">
+                                <h3>Analysis</h3>
+                                <hr>
+                                <ul>
+                                    <li><a href="#" class="text-decoration-none">Back Angle</a></li>
+                                </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    <div class="clearfix"></div>
+                </div>
+                <h3>All Videos</h3>
+                <div class="row mt-2">
+                    <div class="vidz_list">
+                        <div class="row">
+                            {% for hist in history %}
+                            <!-- Replace each video thumbnail with jinja. Info required: Location, Thumbnail, Time of vid, Vid Title, Date -->
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-6 full_wdth">
+                                <div class="videoo">
+                                    <div class="vid_thumbainl">
+                                        <a href="/analysis/{{hist.RawVideo_id}}" title="">
+                                            <img src="{{url_for('static', filename='' + hist.thumb_path) }}" alt="">
+                                            <!-- <span class="vid-time">0:08</span> -->
+                                        </a>	
+                                    </div><!--vid_thumbnail end-->
+                                    <div class="video_info">
+                                        <h3><a href="single_video_page.html" title="">{{hist.Name}}</a></h3>
+                                        <span>{{hist.Event}} |<small class="posted_dt">{{hist.Date.strftime('%d-%m-%Y')}}</small></span>
+                                    </div>
+                                </div><!--videoo end-->
+                            </div>
+                            {% endfor %}
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

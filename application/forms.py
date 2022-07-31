@@ -17,6 +17,6 @@ class RegisterForm(FlaskForm):
 
 class VideoForm(FlaskForm):
     title = StringField('Title')
-    videoMethod =SelectField(u"Method",choices=[(0,"Side view"),(1,"Back View")],validators=[InputRequired()])
+    videoMethod =SelectField(u"Method",choices=[(0,"Back Angle"),(1,"Timing")],validators=[InputRequired()])
     event= StringField('Event')
     submit = SubmitField("Upload")

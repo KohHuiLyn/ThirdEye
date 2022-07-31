@@ -19,8 +19,8 @@
         {%for hist in history%}
             <tr>
                 <td>{{hist.id}}</td>
-                <td><a href="/analysis/{{hist.id}}">{{hist.video_path}}</a></td>
-                <td>{{hist.date}}</td>
+                <td><a href="/analysis/{{hist.RawVideoid}}"><img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + hist.thumb_path) }}" alt="SSIMAGE"/></a></td>
+                <td>{{hist.Date}}</td>
             </tr>   
         {% endfor %}
         </table>

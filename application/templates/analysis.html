@@ -24,7 +24,7 @@
 								</video>
 							</div><!--vid-pr end-->
 							<div class="vid-info">
-								<h3>Kingdom Come: Deliverance Funny Moments and Fails Compilation</h3>
+								{{analysis[0].Name}}
 							</div><!--vid-info end-->
 						</div><!--vid-1 end-->
 						<div class="abt-mk">
@@ -73,10 +73,16 @@
 
 	<div class="container">
 		<h3 class="pb-3" style="font-size:30px">Analysis</h3>
-	{% for anal in analysis %}
+	{%if analysis|length ==5%}
+		{% for anal in analysis %}
 			<h3>Back Angle: {{anal.Angle}}</h3>
 			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="SSIMAGE"/>
-	{% endfor %}
+		{% endfor %}
+	{%elif analysis|length==1%}
+		<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + analysis[0].Photo_filepath) }}" alt="SSIMAGE"/>
+		<h3>Analysis: {{analysis[0].Ball_release}}</h3>
+
+	{% endif %}
 
 		
 		<!-- <div id="accordion">

@@ -1,8 +1,10 @@
 import email
 from unicodedata import name
 from webbrowser import get
+
+from matplotlib.image import thumbnail
 from application import app,db
-from application.models import User,Students, Video, Analysis 
+from application.models import User,Students, RawVideo, Analysis,Thumbnail 
 from datetime import datetime
 from application.forms import  VideoForm
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -76,35 +78,48 @@ def upload_file( ):
         filename = secure_filename(uploaded_file.filename)
         if uploaded_file.filename != '': 
             title=form.title.data
-            print(title)
-            videoMethod=form.videoMethod.data
+            videoMethod=form.videoMethod.data #Back or Side
+            # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
             uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
-            print("filepath ", DB_Filepath)
-            videoEntry=Video(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
+            # print("filepath ", DB_Filepath)
+            videoEntry=RawVideo(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
-            video_id=add_entry(videoEntry)
+            Rawvideo_id=add_entry(videoEntry)
+            print(Rawvideo_id)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
-            
-            backangles=mpEstimate().main(DB_Filepath,name)#name supposed to be a variable
-            print("backangles ", backangles)
-            
-            mpEstimate().screenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
-           
-            # entries = Entry.query.filter_by(user_id=userid)
-            print("length of backangles", len(backangles) )
-            for i in range (0,len(backangles),1):
+            if int(videoMethod)==0:
+                print("FWD BACK")
+                backangles=mpEstimate().backAngle(DB_Filepath,name)#name supposed to be a variable
                 
-                # TO BE CHANGED TEMPORARILY
-                #analysisentry=Analysis(Video_id=names[0],Video_filepath='./application/analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%s_%d.jpg"%(name,i),Angle=int(backangles[i]))
-                analysisentry=Analysis(Video_id=video_id,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                # print("backangles ", backangles)
+                mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
+                # entries = Entry.query.filter_by(user_id=userid)
+                # print("length of backangles", len(backangles) )
+                thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                add_entry(thumbnailentry)  
                 
+                for i in range (0,len(backangles),1):
+                    
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                    
+                    add_entry(analysisentry)
+            elif int(videoMethod)==1:
+                print("FWD Timing")
+                Timing=mpEstimate().timing(DB_Filepath,name)
+                Timing=str(Timing)
+                #perform mediapipe function
+                mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+                #Inputting file paths
+                thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
                 add_entry(analysisentry)
+                add_entry(thmumbnailentry)    
             
-            return redirect(url_for('analysis',videoid=video_id))
+        return redirect(url_for('analysis',videoid=Rawvideo_id))
     
 
     
@@ -116,9 +131,7 @@ def history():
 
 def gethistory():
     try:
-        
-        video=Video.query.all()
-        
+        video=Thumbnail.query.all()
         return video
     except Exception as error:
         db.session.rollback()
@@ -141,7 +154,7 @@ def analysis(videoid):
 def get_latestAnalysis(video_id):
     try:
         # analysis = Analysis.query.all()
-        analysis=Analysis.query.filter_by(Video_id=video_id).all()
+        analysis=Analysis.query.filter_by(RawVideo_id=video_id).all()
         # print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:

@@ -1,7 +1,7 @@
 from application import db
 import datetime as dt
 from sqlalchemy.orm import validates
-from flask_login import  UserMixin 
+from flask_login import  UserMixin
 
 class User(UserMixin,db.Model):
     __tablename__ = 'Users'
@@ -48,5 +48,10 @@ class Analysis(UserMixin,db.Model):
     Photo_filepath=db.Column(db.String,nullable=False)
     Angle=db.Column(db.Integer, nullable=True)
     Ball_release=db.Column(db.String,nullable=True)
-    # Error_Count=db.Column(db.Integer,nullable=True) 
-    
+    Error_Count=db.Column(db.Integer,nullable=True) 
+
+class Parameters(UserMixin,db.Model):
+    __tablename__='Parameters'
+    id=db.Column(db.Integer, primary_key=True,autoincrement=True)
+    Back_angle=db.Column(db.Integer,nullable=True)
+    Feet_length=db.Column(db.Integer,nullable=True)

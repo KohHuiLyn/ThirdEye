@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField,StringField,PasswordField,SubmitField
+from wtforms import SelectField,StringField,PasswordField,IntegerField,SubmitField
 from wtforms.validators import InputRequired, Email, Length
 
 
@@ -20,3 +20,10 @@ class VideoForm(FlaskForm):
     videoMethod =SelectField(u"Method",choices=[(0,"Back Angle"),(1,"Timing")],validators=[InputRequired()])
     event= StringField('Event')
     submit = SubmitField("Upload")
+
+class Back_Form(FlaskForm):
+    back_angle = IntegerField("Back_angle", validators = [InputRequired()])
+    submit = SubmitField("Submit")
+class Feet_Form(FlaskForm):
+    feet_length = StringField("Feet_length",validators=[InputRequired()])
+    submit = SubmitField("Submit")

@@ -45,7 +45,7 @@ Home
     <div class="rounded container-fluid mt-5">
         <div class="row">
           <div class="col-6 bg-dark mx-auto p-5 rounded">
-            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
+            <form method="POST" action="{{ url_for('upload_file') }}" id="analysisForm" enctype="multipart/form-data"> 
               <fieldset class="form-group text-light">
                 <div class="mx-auto text-center pb-2"><i class="bi bi-cloud-upload text-light pb-3" style="font-size: 7em"></i></div>
                 <label for="Upload" class="form-label pt-3">Upload Video</label>
@@ -54,32 +54,45 @@ Home
                 <br/>
                 <label for="Title" class="form-label pt-3">Title</label>
                 {{ form.title(id="title",placeholder="Add your title", class="form-control") }}       
-                <label for="Event" class="form-label pt-3">Event</label> 
-                {{form.event(id="event",placeholder="Add the event", class="form-control")}}      
+                <label for="Event" class="form-label pt-3">Location</label> 
+                {{form.event(id="event",class="form-control")}}      
                 <label for="videoMethod" class="form-label pt-3">Choose an Analysis Type</label>
                 {{form.videoMethod(id="videoMethod", class="form-control")}}
                 {% for error in form.videoMethod.errors %}
                 <span class="error-message">{{ error }}</span>
                 {% endfor %}
                 <label for="submit" class="form-label pt-3"></label>
-                {{ form.submit(class_='form-control') }}
+                {{ form.submit(class='form-control', onclick="loadModal();") }}
               </fieldset>
               
             </form>
           </div>  
         </div>
     </div>
-    <!-- Delete later -->
-   <div class="col"> 
-
-            <div class="col">
-            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
-
-            </form>       
-                    
-        
+    <!-- Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Processing Video...</h5>
+          </div>
+          <div class="modal-body text-center">
+            <div class="spinner-border" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+            <p>Processing video... You will be redirected once proccessing is complete.</p>
+          </div>
+        </div>
+      </div>
     </div>
-  
+    <script>
+      function loadModal(){
+        $("#loadingModal").modal({backdrop: "static"});
+        $('#loadingModal').modal('show');
+      }
+    </script>
+
+
     <script src="../static/js/Webcam.js"></script>
     <script src="{{ url_for('static',filename='js/upload.js')}}"></script>
     

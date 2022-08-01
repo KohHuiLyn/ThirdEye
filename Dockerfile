@@ -15,5 +15,5 @@ ADD . /app
 # Expose port 5000 for http communication
 EXPOSE 5000
 # Run gunicorn web server and binds it to the port
-CMD gunicorn --bind 0.0.0.0:5000 app:app
+CMD gunicorn --bind 0.0.0.0:$PORT app:app
 

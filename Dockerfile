@@ -3,6 +3,7 @@ FROM python:3.8-slim
 #update the packages installed in the image
 RUN apt-get update -y
 RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get install libglib2.0-0
 # Make a app directory to contain our application
 RUN mkdir /app
 # Copy every files and folder into the app folder

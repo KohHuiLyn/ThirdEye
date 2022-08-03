@@ -1,7 +1,7 @@
 
 FROM python:3.8-slim
 #update the packages installed in the image
-RUN apt-get install python-opencv
+RUN apt install libunistring-dev libaom-dev libdav1d-dev
 RUN apt-get update -y
 RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN apt-get install libglib2.0-0

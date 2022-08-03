@@ -4,11 +4,14 @@ from webbrowser import get
 
 from matplotlib.image import thumbnail
 from application import app,db
+from application.models import Users,Students, RawVideo, Analysis, Parameters, Thumbnail
 from application.models import User,Students, RawVideo, Analysis, Parameters, Thumbnail
 from datetime import datetime
+from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, LoginForm,RegisterForm
 from application.forms import  Back_Form, VideoForm, Feet_Form
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 # from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for 
 from flask_cors import CORS, cross_origin
@@ -173,11 +176,13 @@ def upload_file( ):
                 mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
                 # entries = Entry.query.filter_by(user_id=userid)
                 # print("length of backangles", len(backangles) )
+                thumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 add_entry(thumbnailentry)  
                 
                 for i in range (0,len(backangles),1):
                     
+                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
                     analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
                     
                     add_entry(analysisentry)
@@ -188,6 +193,8 @@ def upload_file( ):
                 #perform mediapipe function
                 mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
                 #Inputting file paths
+                thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
                 thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
                 add_entry(analysisentry)
@@ -206,12 +213,13 @@ def history():
 
 def gethistory():
     try:
-        video=Thumbnail.query.all()
+        video=Thumbnail.query.filter_by(User_id=current_user.id).all()
         return video
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 
         return 0
+
 
 @app.route("/login",methods=['GET'])
 def login():
@@ -287,7 +295,8 @@ def analysis(videoid):
 def get_latestAnalysis(video_id):
     try:
         # analysis = Analysis.query.all()
-        analysis=Analysis.query.filter_by(RawVideo_id=video_id).all()
+        analysis=Analysis.query.filter_by(RawVideo_id=video_id,User_id=current_user.id).all()
+        
         # print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:

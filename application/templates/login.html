@@ -10,19 +10,18 @@
 						<div class="text-center">
 							<img src="{{url_for('static', filename='images/logo.jpeg') }}" class="pb-5" alt="logo"/>
 						</div>
-						<form action="/" class="login-form" method="POST">
-							{{ form.hidden_tag() }}
+						<form action="#" class="signin-form">
 							<div class="form-group">
-							{{ form.username (class_="form-control", style="background-color: rgba(255, 255, 255, 0.336)")}}
+								<input type="text" class="form-control" style="background-color: rgba(255, 255, 255, 0.336)" placeholder="Username" required>
 							</div>
 						<div class="form-group">
-							{{ form.password (class_="form-control", style="background-color: rgba(255, 255, 255, 0.336)")}}
-						{# <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>#}
+						<input id="password-field" type="password" class="form-control" style="background-color: rgba(255, 255, 255, 0.336)" placeholder="Password" required>
+						<span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
 						</div>
 						<div class="form-group">
 							<button type="submit" class="form-control btn btn-primary submit px-3" style="background: #E49322">Sign In</button>
 						</div>
-						{# <div class="form-group d-md-flex">
+						<div class="form-group d-md-flex">
 							<div class="w-50">
 								<label class="checkbox-wrap checkbox-primary">Remember Me
 									<input type="checkbox" checked>
@@ -31,7 +30,7 @@
 							</div>
 							<div class="w-50 text-md-right">
 								<a href="#" style="color: #fff">Forgot Password</a>
-							</div> #}
+							</div>
 						</div>
 						</form>
 					</div>

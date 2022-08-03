@@ -43,6 +43,19 @@ def load_user(user_id):
     return Users.query.get(int(user_id))
 
 
+#Function for INSERT into database
+def add_entry(new_entry):
+    try:
+        db.session.add(new_entry)
+        db.session.commit()
+        print("success")
+        return new_entry.id
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger")
+
+
+
 #Creating Default User
 def create_users():
     print("fn start")
@@ -128,16 +141,7 @@ def signup():
 
 
 
-#Function for INSERT into database
-def add_entry(new_entry):
-    try:
-        db.session.add(new_entry)
-        db.session.commit()
-        print("success")
-        return new_entry.id
-    except Exception as error:
-        db.session.rollback()
-        flash(error,"danger")
+
 
  
 

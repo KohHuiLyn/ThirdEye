@@ -59,8 +59,7 @@ class mpEstimate:
         return X
     
     def timing(self,file_path, name):
-        # Clears timing frame number in case
-        self.timingframenumber=[]
+
         # Choose which video to use
         # (For webcam input replace file name with 0)
         file_path = file_path
@@ -437,7 +436,7 @@ class mpEstimate:
         return self.AngleAtStep
         
         
-    def Timingscreenshot(self,file_path,name):
+    def Timingscreenshot(self,file_path,name,timing):
         print("Screenshot Started")
         Analpath ='./application/static/Analysedphoto'
         AnalisExist = os.path.exists(Analpath)
@@ -464,11 +463,10 @@ class mpEstimate:
         # print(name)
         # If no ball release captured, then just ss thumbnail
         frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
-        print(frameLen)
-        print("timingframenumber", self.timingframenumber)
-        print("len is ", len(self.timingframenumber))
         # for videos with no ball release type able to be captured
-        if len(self.timingframenumber) == 0:
+        print("timing is ",timing)
+        # just ss thumbnail
+        if timing == "None":
             for i in range(0,2):
                 ret, frame= cap.read()
                 cap.set(cv2.CAP_PROP_POS_FRAMES, i)
@@ -476,9 +474,14 @@ class mpEstimate:
                     cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
         else:
             # for videos with ball release type
+            print(frameLen)
+            print("timingframenumber", self.timingframenumber)
+            print("len is ", len(self.timingframenumber))
+            ssTiming = [self.timingframenumber[-1]]
+            print("sstiming", ssTiming)
             while bool:
                 for i in range(0,frameLen,1):
-                    if x>=len(self.timingframenumber):
+                    if x>=len(ssTiming):
                         bool=False
                         break
                     ret, frame= cap.read()
@@ -486,10 +489,11 @@ class mpEstimate:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, i)
                     if i == 1:
                         cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
-                    if i==self.timingframenumber[0]:
+                    if i==ssTiming[0]:
                         cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)
                         print('Read a new frame: ', ret)
                         x=x+1
+            
 
     
     def Backscreenshot(self,file_path,name):

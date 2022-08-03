@@ -31,6 +31,29 @@ import mediapipe as mp
 from application.mediapipePY import mpEstimate
 db.create_all()
 
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+app.secret_key = 'extremely secretive!'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+#Creating Default User
+def create_users():
+    print("fn start")
+    if Users.query.filter_by(username="admin").first() is None:
+        print("adding user")
+        hashed_password1 = generate_password_hash("Password", method='sha256')
+        userentry1=Users(username="admin",email="admin@gmail.com",password=hashed_password1)
+        add_entry(userentry1)
+create_users()
+
+
+
 # Creates a default database for parameters
 rows = db.session.query(func.count(Parameters.id)).scalar()
 if (rows < 1):
@@ -52,11 +75,56 @@ if not RawisExist:
     os.makedirs(rawpath)
     print("rawvideo folder is created!")
 
+
+
+
+
+@app.route('/video',methods=['GET','POST'])
+@login_required
 @app.route('/',methods=['GET','POST'])
+
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('index.html',form=form,title="Home Page")
+
+
+@app.route("/",methods=['GET','POST'])
+def login():
+    form=LoginForm()
+    if form.validate_on_submit():
+        print("validated")
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            if check_password_hash(user.password, form.password.data):
+                login_user(user)
+                flash(f"Login!","success")
+                print(current_user.id)
+                return redirect(url_for('video'))
+
+        return '<h1>Invalid username or password</h1>'
+
+    return render_template('login.html',form=form)
+
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+@login_required
+def signup():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        hashed_password = generate_password_hash(form.password.data, method='sha256')
+        new_user = Users(username=form.username.data, email=form.email.data, password=hashed_password)
+        add_entry(new_user)
+        flash(f"User Created")
+        return render_template('signup.html', form=form)
+        #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
+
+    return render_template('signup.html', form=form)
+
+
+
 
 
 #Function for INSERT into database
@@ -131,6 +199,7 @@ def upload_file( ):
     
 
 @app.route("/history",methods=['GET'])
+@login_required
 def history():
     
     return render_template('history.html',title="Your History", history=gethistory())
@@ -149,6 +218,7 @@ def login():
     return render_template('login.html',title="Login")
     
 @app.route("/settings",methods=['GET'])
+@login_required
 def settings():  
     back_form = Back_Form()
     feet_form = Feet_Form()
@@ -209,6 +279,7 @@ def feet_param():
                                     update=update)
 
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
+@login_required
 def analysis(videoid):
     
     return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))

@@ -95,8 +95,6 @@ if not RawisExist:
 
 @app.route('/video',methods=['GET','POST'])
 @login_required
-@app.route('/',methods=['GET','POST'])
-
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])

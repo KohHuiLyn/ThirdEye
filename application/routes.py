@@ -1,15 +1,14 @@
 import email
 from unicodedata import name
 from webbrowser import get
-
 from matplotlib.image import thumbnail
 from application import app,db
-from application.models import User,Students, RawVideo, Analysis, Parameters, Thumbnail
+from application.models import Users,Students, RawVideo, Analysis, Parameters, Thumbnail
 from datetime import datetime
-from application.forms import  Back_Form, VideoForm, Feet_Form
+from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, LoginForm,RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-# from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
+from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for 
 from flask_cors import CORS, cross_origin
 from sqlalchemy import text, func
@@ -30,6 +29,16 @@ import math as m
 import mediapipe as mp
 from application.mediapipePY import mpEstimate
 db.create_all()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+app.secret_key = 'extremely secretive!'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
 
 # Creates a default database for parameters
 rows = db.session.query(func.count(Parameters.id)).scalar()
@@ -52,11 +61,50 @@ if not RawisExist:
     os.makedirs(rawpath)
     print("rawvideo folder is created!")
 
-@app.route('/',methods=['GET','POST'])
+
+
+
+@app.route('/video',methods=['GET','POST'])
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('index.html',form=form,title="Home Page")
+
+@app.route("/",methods=['GET','POST'])
+def login():
+    form=LoginForm()
+    if form.validate_on_submit():
+        print("validated")
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            if check_password_hash(user.password, form.password.data):
+                login_user(user)
+                flash(f"Login!","success")
+                print(current_user.id)
+                return redirect(url_for('video'))
+
+        return '<h1>Invalid username or password</h1>'
+
+    return render_template('login.html',form=form)
+
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        hashed_password = generate_password_hash(form.password.data, method='sha256')
+        new_user = Users(username=form.username.data, email=form.email.data, password=hashed_password)
+        add_entry(new_user)
+        flash(f"User Created")
+        return render_template('signup.html', form=form)
+        #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
+
+    return render_template('signup.html', form=form)
+
+
+
 
 
 #Function for INSERT into database
@@ -105,12 +153,12 @@ def upload_file( ):
                 mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
                 # entries = Entry.query.filter_by(user_id=userid)
                 # print("length of backangles", len(backangles) )
-                thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                thumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 add_entry(thumbnailentry)  
                 
                 for i in range (0,len(backangles),1):
                     
-                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
                     
                     add_entry(analysisentry)
             elif int(videoMethod)==1:
@@ -120,8 +168,8 @@ def upload_file( ):
                 #perform mediapipe function
                 mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
                 #Inputting file paths
-                thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
+                thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
                 add_entry(analysisentry)
                 add_entry(thmumbnailentry)    
             
@@ -137,16 +185,14 @@ def history():
 
 def gethistory():
     try:
-        video=Thumbnail.query.all()
+        video=Thumbnail.query.filter_by(User_id=current_user.id).all()
         return video
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 
         return 0
 
-@app.route("/login",methods=['GET'])
-def login():
-    return render_template('login.html',title="Login")
+
     
 @app.route("/settings",methods=['GET'])
 def settings():  
@@ -216,7 +262,7 @@ def analysis(videoid):
 def get_latestAnalysis(video_id):
     try:
         # analysis = Analysis.query.all()
-        analysis=Analysis.query.filter_by(RawVideo_id=video_id).all()
+        analysis=Analysis.query.filter_by(RawVideo_id=video_id,User_id=current_user.id).all()
         # print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:

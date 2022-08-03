@@ -3,14 +3,16 @@ import datetime as dt
 from sqlalchemy.orm import validates
 from flask_login import  UserMixin
 
-class User(UserMixin,db.Model):
+class Users(UserMixin,db.Model):
     __tablename__ = 'Users'
- 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username=db.Column(db.String,nullable=False)
+    username=db.Column(db.String,unique=True,nullable=False)
     email=db.Column(db.String,unique=True,nullable=False)
     password=db.Column(db.String,nullable=False)
-    # Videos=db.relationship('Video',backref='user')
+    RawVideos=db.relationship('RawVideo',backref='users')
+    Analysis=db.relationship('Analysis',backref='users')
+    Thumbnail=db.relationship('Thumbnail',backref='users')
+    
 
 class Students(UserMixin,db.Model):
     __tablename__='Students'
@@ -20,7 +22,7 @@ class Students(UserMixin,db.Model):
 class RawVideo(UserMixin, db.Model):
     __tablename__='RawVideo'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
-    # User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
+    User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
     # Student_id=db.Column(db.Integer,db.ForeignKey('Students.id'))
     video_path=db.Column(db.String)
     date=db.Column(db.DateTime,nullable=False)
@@ -31,7 +33,7 @@ class RawVideo(UserMixin, db.Model):
 class Thumbnail(UserMixin, db.Model):
     __tablename__='Thumbnail'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
-    # User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
+    User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
     # Student_id=db.Column(db.Integer,db.ForeignKey('Students.id'))
     RawVideo_id=db.Column(db.Integer,db.ForeignKey('RawVideo.id'))
     thumb_path=db.Column(db.String)
@@ -42,6 +44,7 @@ class Thumbnail(UserMixin, db.Model):
 class Analysis(UserMixin,db.Model):
     __tablename__='Analysis'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
+    User_id=db.Column(db.Integer,db.ForeignKey('Users.id'))
     RawVideo_id=db.Column(db.Integer,db.ForeignKey('RawVideo.id'))
     Name=db.Column(db.String,nullable=False)
     Video_filepath=db.Column(db.String,nullable=False)

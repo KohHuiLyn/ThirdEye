@@ -68,7 +68,7 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'avc1') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)

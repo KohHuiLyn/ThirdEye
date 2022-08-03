@@ -1,7 +1,6 @@
 import email
 from unicodedata import name
 from webbrowser import get
-
 from matplotlib.image import thumbnail
 from application import app,db
 from application.models import Users,Students, RawVideo, Analysis, Parameters, Thumbnail
@@ -93,12 +92,7 @@ if not RawisExist:
 
 
 
-@app.route('/video',methods=['GET','POST'])
-@login_required
-def video():
-    form=VideoForm()
-    # files = os.listdir(app.config['UPLOAD_PATH'])
-    return render_template('index.html',form=form,title="Home Page")
+
 
 
 @app.route("/",methods=['GET','POST'])
@@ -118,7 +112,12 @@ def login():
 
     return render_template('login.html',form=form)
 
-
+@app.route('/video',methods=['GET','POST'])
+@login_required
+def video():
+    form=VideoForm()
+    # files = os.listdir(app.config['UPLOAD_PATH'])
+    return render_template('index.html',form=form,title="Home Page")
 
 @app.route('/signup', methods=['GET', 'POST'])
 @login_required
@@ -166,7 +165,8 @@ def upload_file( ):
             videoEntry=RawVideo(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
-            print(Rawvideo_id)
+            # print(Rawvideo_id)
+            title=re.sub("[\s/]","-",title)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
@@ -219,11 +219,6 @@ def gethistory():
         db.session.rollback()
         flash(error,"danger") 
         return 0
-
-
-@app.route("/login",methods=['GET'])
-def login():
-    return render_template('login.html',title="Login")
     
 @app.route("/settings",methods=['GET'])
 @login_required

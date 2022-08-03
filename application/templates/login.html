@@ -15,13 +15,12 @@
 						<form action="#" class="signin-form">
 							<div class="form-group">
 							{{ form.username (class_="form-control", style="background-color: rgba(255, 255, 255, 0.336)")}}
-								<input type="text" class="form-control" style="background-color: rgba(255, 255, 255, 0.336)" placeholder="Username" required>
+								
 							</div>
 						<div class="form-group">
 							{{ form.password (class_="form-control", style="background-color: rgba(255, 255, 255, 0.336)")}}
 						{# <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>#}
-						<input id="password-field" type="password" class="form-control" style="background-color: rgba(255, 255, 255, 0.336)" placeholder="Password" required>
-						<span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+						
 						</div>
 						<div class="form-group">
 							<button type="submit" class="form-control btn btn-primary submit px-3" style="background: #E49322">Sign In</button>
@@ -41,4 +40,6 @@
 						</div>
 						</form>
 					</div>
+
+					{% endblock %}
 

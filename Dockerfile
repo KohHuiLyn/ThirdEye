@@ -5,7 +5,7 @@ RUN apt-get update -y
 RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN apt-get install libglib2.0-0
 RUN apt-get install libunistring-dev libaom-dev libdav1d-dev
-RUN apt-get install python3-opencv 
+# RUN apt-get install python3-opencv 
 # Make a app directory to contain our application
 RUN mkdir /app
 # Copy every files and folder into the app folder

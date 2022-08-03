@@ -40,6 +40,17 @@ def load_user(user_id):
     return Users.query.get(int(user_id))
 
 
+#Creating Default User
+def create_users():
+    print("fn start")
+    if Users.query.filter_by(username="admin").first() is None:
+        print("adding user")
+        hashed_password1 = generate_password_hash("Password", method='sha256')
+        userentry1=Users(username="admin",email="admin@gmail.com",password=hashed_password1)
+        add_entry(userentry1)
+create_users()
+
+
 # Creates a default database for parameters
 rows = db.session.query(func.count(Parameters.id)).scalar()
 if (rows < 1):
@@ -65,6 +76,7 @@ if not RawisExist:
 
 
 @app.route('/video',methods=['GET','POST'])
+@login_required
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])
@@ -90,6 +102,7 @@ def login():
 
 
 @app.route('/signup', methods=['GET', 'POST'])
+@login_required
 def signup():
     form = RegisterForm()
 
@@ -179,6 +192,7 @@ def upload_file( ):
     
 
 @app.route("/history",methods=['GET'])
+@login_required
 def history():
     
     return render_template('history.html',title="Your History", history=gethistory())
@@ -195,6 +209,7 @@ def gethistory():
 
     
 @app.route("/settings",methods=['GET'])
+@login_required
 def settings():  
     back_form = Back_Form()
     feet_form = Feet_Form()
@@ -255,6 +270,7 @@ def feet_param():
                                     update=update)
 
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
+@login_required
 def analysis(videoid):
     
     return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))

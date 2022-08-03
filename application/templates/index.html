@@ -50,10 +50,10 @@ Home
                 <div class="mx-auto text-center pb-2"><i class="bi bi-cloud-upload text-light pb-3" style="font-size: 7em"></i></div>
                 <label for="Upload" class="form-label pt-3">Upload Video</label>
                 <br/>
-                <input id="Upload" type="file" name="file" accept="video/*">
+                <input id="Upload" type="file" name="file" required accept="video/*">
                 <br/>
                 <label for="Title" class="form-label pt-3">Title</label>
-                {{ form.title(id="title",placeholder="Add your title", class="form-control") }}       
+                {{ form.title(id="title",placeholder="Add your title",required='required', class="form-control") }}       
                 <label for="Event" class="form-label pt-3">Location</label> 
                 {{form.event(id="event",class="form-control")}}      
                 <label for="videoMethod" class="form-label pt-3">Choose an Analysis Type</label>
@@ -87,8 +87,16 @@ Home
     </div>
     <script>
       function loadModal(){
-        $("#loadingModal").modal({backdrop: "static"});
-        $('#loadingModal').modal('show');
+        title = document.getElementById('title').value
+        console.log("TITLE IS "+ title)
+        if ($('#Upload')[0].files.length > 0 &&  title!=null) {
+          $("#loadingModal").modal({backdrop: "static"});
+          $('#loadingModal').modal('show');
+          console.log("HERE")
+        }else {
+          console.log("ELSE")
+        }
+
       }
     </script>
 

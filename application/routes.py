@@ -10,7 +10,7 @@ from application.forms import  Back_Form, VideoForm, Feet_Form
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 # from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
-from flask import render_template, request, flash, json, jsonify,redirect,url_for 
+from flask import render_template, request, flash, json, jsonify,redirect,url_for, abort 
 from flask_cors import CORS, cross_origin
 from sqlalchemy import text, func
 import pathlib, os
@@ -107,14 +107,21 @@ def upload_file( ):
                 # print("length of backangles", len(backangles) )
                 thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 add_entry(thumbnailentry)  
-                
-                for i in range (0,len(backangles),1):
-                    
+                print("backangles is ",backangles)
+                print("len is ",len(backangles))
+                # If no backangles detected, insert record with length of 2, so that website won't confuse with Ball Release, which has length of 1.
+                # Make the angles null.
+                if len(backangles)==0:
+                    for i in range(2):
+                        analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO")
+                        add_entry(analysisentry)
+                for i in range (0,len(backangles),1):    
                     analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
-                    
                     add_entry(analysisentry)
+                return redirect(url_for('analysis',videoid=Rawvideo_id))
             elif int(videoMethod)==1:
                 print("FWD Timing")
+            try:
                 Timing=mpEstimate().timing(DB_Filepath,name)
                 Timing=str(Timing)
                 #perform mediapipe function
@@ -123,11 +130,21 @@ def upload_file( ):
                 thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
                 add_entry(analysisentry)
-                add_entry(thmumbnailentry)    
-            
-        return redirect(url_for('analysis',videoid=Rawvideo_id))
+                add_entry(thmumbnailentry)   
+                return redirect(url_for('analysis',videoid=Rawvideo_id))
+            except Exception as e:
+                print("exception")
+                print(e)
+                abort(500) 
+                return "video"
+        
+        
     
 
+@app.errorhandler(500)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('500error.html'), 500
     
 
 @app.route("/history",methods=['GET'])

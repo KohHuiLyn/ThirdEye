@@ -59,6 +59,8 @@ class mpEstimate:
         return X
     
     def timing(self,file_path, name):
+        # Clears timing frame number in case
+        self.timingframenumber=[]
         # Choose which video to use
         # (For webcam input replace file name with 0)
         file_path = file_path
@@ -166,11 +168,12 @@ class mpEstimate:
                         stage = "down"
                     elif feetDist < maxFeetLength:
                         stage = "up"
-            
-                if currentFrame > 20:
-                    preFrame_Y = currentFrame - 3
-                    diffBtY = r_wrist_y - feetVelo["Wrist_Y"][preFrame_Y]
-                    diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
+                if len(feetVelo.index)> 3:
+                    # Getting index of 3 frames ago [CHANGED!!!]
+                    preFrameIndex = len(feetVelo.index)-3
+                    # If the index isn't negative, can extract out for formula.
+                    diffBtY = r_wrist_y - feetVelo["Wrist_Y"][preFrameIndex]
+                # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
                 if diffBtY > 0 and r_shldr_x>r_wrist_x:
                     throwCount = throwCount+1
                     if throwCount == 3:
@@ -181,10 +184,11 @@ class mpEstimate:
                 if (feetDist > 2*maxFeetLength and throwing == True) or sliding==True :
                     sliding=True
                     # currentFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                    pre = currentFrame - 4
-                    if currentFrame > 10:
+                    preIndex = len(feetVelo.index)-3
+                    pre = currentFrame-4
+                    if len(feetVelo.index) > 4:
                         # Calculate Velocity with this frame and 4 frames before
-                        velo = abs(((l_heel_x - feetVelo["LH_X"][pre])/(currentFrame-pre)))
+                        velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame-pre)))
                         if velo > 3:
                             fastFeet = True
                         if velo < 0.6 and access == 1 and fastFeet == True:
@@ -262,6 +266,10 @@ class mpEstimate:
  
 
     def backAngle(self,file_path,name):
+        # Clear frame numbers to ensure right frame is taken.
+        for key in self.BackCurrentFrameNumber:
+            self.BackCurrentFrameNumber[key] = None
+        self.AngleAtStep = []
         # Choose which video to use
         # (For webcam input replace file name with 0)
         file_path = file_path
@@ -454,23 +462,35 @@ class mpEstimate:
         # date=datetime.utcnow()
         # print(date)
         # print(name)
+        # If no ball release captured, then just ss thumbnail
         frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
         print(frameLen)
         print("timingframenumber", self.timingframenumber)
-        while bool:
-            for i in range(0,frameLen,1):
-                if x>=len(self.timingframenumber):
-                    bool=False
-                    break
+        print("len is ", len(self.timingframenumber))
+        # for videos with no ball release type able to be captured
+        if len(self.timingframenumber) == 0:
+            for i in range(0,2):
                 ret, frame= cap.read()
-            
                 cap.set(cv2.CAP_PROP_POS_FRAMES, i)
                 if i == 1:
-                    cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)  
-                if i==self.timingframenumber[0]:
-                    cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)
-                    print('Read a new frame: ', ret)
-                    x=x+1
+                    cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
+        else:
+            # for videos with ball release type
+            while bool:
+                for i in range(0,frameLen,1):
+                    if x>=len(self.timingframenumber):
+                        bool=False
+                        break
+                    ret, frame= cap.read()
+                
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                    if i == 1:
+                        cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
+                    if i==self.timingframenumber[0]:
+                        cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)
+                        print('Read a new frame: ', ret)
+                        x=x+1
+
     
     def Backscreenshot(self,file_path,name):
         print("Screenshot Started")
@@ -493,25 +513,49 @@ class mpEstimate:
         cap=cv2.VideoCapture(file_path)
         x=0
         bool=True
+        noneCount=0
         frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
-        while bool:
-            for i in range(0,frameLen,1):
-                if x>=len(self.BackCurrentFrameNumber):
-                    bool=False
-                    break
+        ssDict = {}
+        # Checking for Nones (when there are less than 5 step angle)
+        for key, value in self.BackCurrentFrameNumber.copy().items():
+            if value is None:
+                # Counts for None values in the dictionary, if none count is 5, no back angle recorded. Just SS thumbnail.
+                print("in none, val is",value)
+                noneCount += 1 
+            else:
+                print("in ssdict val is", value)
+                ssDict[key] = value
+        print("ssdict is",ssDict)
+        # If all values in the dictionary is None,
+        if noneCount == 5:
+            for i in range(0,2):
                 ret, frame= cap.read()
-            
                 cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-                for val in self.BackCurrentFrameNumber.values():
-                    if i == 1:
-                        cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)       
-                    if i == val[0] :
-                        print(cap.get(cv2.CAP_PROP_POS_FRAMES))
-                        # print("iv2", i)
-                        
-                        print(x)
-        
-                        cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)     # save frame as JPEG file   
-                        x=x+1
-                        print('Read a new frame: ', ret)
-        
+                if i == 1:
+                    cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
+        else:
+            while bool:
+                for i in range(0,frameLen,1):
+                    if x>=len(ssDict):
+                        bool=False
+                        break
+                    ret, frame= cap.read()
+                
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                    for val in ssDict.values():
+                        print("val ",val)
+                        # Making thumbnail
+                        if i == 1:
+                            cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame) 
+                        if val is not None:     
+                            if i == val[0] :
+                                print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                                # print("iv2", i)
+                                
+                                print(x)
+                
+                                cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)     # save frame as JPEG file   
+                                x=x+1
+                                print('Read a new frame: ', ret)
+                        else:
+                            x+=1

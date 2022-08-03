@@ -78,7 +78,7 @@
 
 	<div class="container p-3 mb-2 bg-light text-dark">
 		<h3 class="pb-3" style="font-size:30px">Model Analysis Result</h3>
-	{%if analysis|length ==5%}
+	{%if analysis|length >1%}
 		{% for anal in analysis %}
 			<h4>Back Angle: {{anal.Angle}}</h4>
 			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="SSIMAGE"/>

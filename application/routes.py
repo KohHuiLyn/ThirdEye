@@ -28,9 +28,13 @@ import cv2
 import time
 import math as m
 import mediapipe as mp
+import redis
+from rq import Queue
 from application.mediapipePY import mpEstimate
 db.create_all()
 
+r=redis.Redis()
+q=Queue(connection=r)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -93,8 +97,6 @@ if not RawisExist:
 
 
 
-
-
 @app.route("/",methods=['GET','POST'])
 def login():
     form=LoginForm()
@@ -135,7 +137,13 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-
+def analysisEntries(backangles,Rawvideo_id):
+    for i in range (0,len(backangles),1):
+                    
+                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                    
+                    add_entry(analysisentry)
+    return redirect(url_for('analysis',videoid=Rawvideo_id))
 
 
 
@@ -170,22 +178,16 @@ def upload_file( ):
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
-                backangles=mpEstimate().backAngle(DB_Filepath,name)#name supposed to be a variable
+                backangles=q.enqueue(mpEstimate().backAngle,args=(DB_Filepath,name))
                 
                 # print("backangles ", backangles)
-                mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
+                job2=q.enqueue(mpEstimate().Backscreenshot,args=('./application/static/analysedvideo/{name}.mp4'.format(name=name),name),depends_on=backangles)
+                # print("length of q (hopefully 2) ", len(q))
                 # entries = Entry.query.filter_by(user_id=userid)
                 # print("length of backangles", len(backangles) )
                 thumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 add_entry(thumbnailentry)  
-                
-                for i in range (0,len(backangles),1):
-                    
-                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
-                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
-                    
-                    add_entry(analysisentry)
+                job3=q.enqueue(analysisEntries,args=(backangles.result,Rawvideo_id),depends_on=backangles)
             elif int(videoMethod)==1:
                 print("FWD Timing")
                 Timing=mpEstimate().timing(DB_Filepath,name)
@@ -195,12 +197,11 @@ def upload_file( ):
                 #Inputting file paths
                 thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
                 analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
-                thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
+               
                 add_entry(analysisentry)
                 add_entry(thmumbnailentry)    
             
-        return redirect(url_for('analysis',videoid=Rawvideo_id))
+        return render_template('index.html',form=form)
     
 
     

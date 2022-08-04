@@ -9,7 +9,6 @@ from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, Login
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
-# from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for 
 from flask_cors import CORS, cross_origin
 from sqlalchemy import text, func
@@ -115,14 +114,12 @@ def login():
     return render_template('login.html',form=form)
 
 @app.route('/video',methods=['GET','POST'])
-@login_required
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('index.html',form=form,title="Home Page")
 
 @app.route('/signup', methods=['GET', 'POST'])
-@login_required
 def signup():
     form = RegisterForm()
 
@@ -137,14 +134,21 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-def analysisEntries(backangles,Rawvideo_id):
+def testf(DB_Filepath,name,Rawvideo_id,event,title):
+    backangles=mpEstimate().backAngle(DB_Filepath,name)
+    print(backangles)
+               
+    
+    thumbnailentry=Thumbnail(User_id=1,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    add_entry(thumbnailentry)
     for i in range (0,len(backangles),1):
-                    
-                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
-                    
-                    add_entry(analysisentry)
+        print(backangles[i])
+        analysisentry=Analysis(User_id=1,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+        print(analysisentry)
+        add_entry(analysisentry)  
+    mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)            
+    
     return redirect(url_for('analysis',videoid=Rawvideo_id))
-
 
 
 
@@ -170,7 +174,7 @@ def upload_file( ):
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             # print("filepath ", DB_Filepath)
-            videoEntry=RawVideo(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
+            videoEntry=RawVideo(User_id=1,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
             # print(Rawvideo_id)
@@ -178,21 +182,14 @@ def upload_file( ):
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
-                backangles=q.enqueue(mpEstimate().backAngle,args=(DB_Filepath,name))
-                
-                # print("backangles ", backangles)
-                job2=q.enqueue(mpEstimate().Backscreenshot,args=('./application/static/analysedvideo/{name}.mp4'.format(name=name),name),depends_on=backangles)
-                # print("length of q (hopefully 2) ", len(q))
-                # entries = Entry.query.filter_by(user_id=userid)
-                # print("length of backangles", len(backangles) )
-                thumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                add_entry(thumbnailentry)  
-                job3=q.enqueue(analysisEntries,args=(backangles.result,Rawvideo_id),depends_on=backangles)
+                job=q.enqueue(testf,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="3m")
+                # print(job.status())
+            
             elif int(videoMethod)==1:
                 print("FWD Timing")
                 Timing=mpEstimate().timing(DB_Filepath,name)
                 Timing=str(Timing)
-                #perform mediapipe function
+                #perform mediapipe function 
                 mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
                 #Inputting file paths
                 thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
@@ -201,13 +198,12 @@ def upload_file( ):
                 add_entry(analysisentry)
                 add_entry(thmumbnailentry)    
             
-        return render_template('index.html',form=form)
+        return redirect(url_for('video'))
     
 
     
 
 @app.route("/history",methods=['GET'])
-@login_required
 def history():
     
     return render_template('history.html',title="Your History", history=gethistory())
@@ -222,7 +218,6 @@ def gethistory():
         return 0
     
 @app.route("/settings",methods=['GET'])
-@login_required
 def settings():  
     back_form = Back_Form()
     feet_form = Feet_Form()
@@ -283,7 +278,6 @@ def feet_param():
                                     update=update)
 
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
-@login_required
 def analysis(videoid):
     
     return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))

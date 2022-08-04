@@ -19,6 +19,8 @@ class mpEstimate:
     light_green = (127, 233, 100)
     yellow = (0, 255, 255)
     pink = (255, 0, 255)
+    
+    feetInfo = pd.DataFrame(columns=["Frame","LH_X","LI_X"])
     # From all the Mediapipe Computer Vision Solutions, select to use Mediapipe Pose============================================
     mp_pose = mp.solutions.pose
 
@@ -83,7 +85,7 @@ class mpEstimate:
 
         # Preparing the dataframes
         # Dataframe to store the Velocity Information
-        feetVelo = pd.DataFrame(columns=['Frame', 'LH_X', 'Velocity', 'Wrist_Y', 'Wrist_X','Acceleration'])
+        feetVelo = pd.DataFrame(columns=['Frame', 'LH_X', 'Velocity', 'Wrist_Y', 'Wrist_X'])
 
         # Variables for Timing
         access = 1
@@ -95,11 +97,7 @@ class mpEstimate:
         throwing = False
         throwCount = 0
         fastFeet = False
-        # preFrame_Y=0  
-        acceleration_count = 0
-        acceleration = None
-        deceleration = False
-        allFufill = False
+        # preFrame_Y=0        
         
         currentFrame= 0
         mp_drawing = mp.solutions.drawing_utils
@@ -174,14 +172,7 @@ class mpEstimate:
                     preFrameIndex = len(feetVelo.index)-3
                     # If the index isn't negative, can extract out for formula.
                     diffBtY = r_wrist_y - feetVelo["Wrist_Y"][preFrameIndex]
-                    # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
-                    
-                    #Calculate Velocity with this frame and 3 frames before
-                    preIndex = len(feetVelo.index)-3
-                    pre = currentFrame-4
-                    velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame - pre)))
-
-                # Check bowler's action whether ready to slide and throw
+                # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
                 if diffBtY > 0 and r_shldr_x>r_wrist_x:
                     throwCount = throwCount+1
                     if throwCount == 3:
@@ -189,60 +180,46 @@ class mpEstimate:
                 else:
                     throwCount = 0 
 
-                # Check whether bowler start to deceleration (stop sliding)
-                if feetDist > 1.8*maxFeetLength and throwing == True:
-                    acceleration = (velo-feetVelo["Velocity"][preIndex])/(currentFrame - pre)
-                    if acceleration < 0:
-                        acceleration_count = acceleration_count + 1
-                        if acceleration_count == 4:
-                            # This deleceration just for understanding purpose
-                            deceleration = True
-                            # This allFufill means all requirements(maxfeetDis, throwing, deceleration) are fufill
-                            allFufill = True
-                    else:
-                        acceleration_count = 0
-
-                if allFufill == True or sliding==True :
+                if (feetDist > 2*maxFeetLength and throwing == True) or sliding==True :
                     sliding=True
                     # currentFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                    preIndex = len(feetVelo.index)-3
+                    pre = currentFrame-4
                     if len(feetVelo.index) > 4:
-                        if velo < 0.6 and access == 1:
+                        # Calculate Velocity with this frame and 4 frames before
+                        velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame-pre)))
+                        if velo > 3:
+                            fastFeet = True
+                        if velo < 0.6 and access == 1 and fastFeet == True:
                             kneesDis = abs(r_knee_x - l_knee_x)
                             print("distance between knee are ", kneesDis)
                             access = 0
                             ball_train_feet_dis = self.findX(r_knee_x, r_wrist_x)
                             ball_slide_feet_dis = self.findX(l_knee_x, r_wrist_x)
                             # Calculate distance between hand and knees to determine ball release type
-                            if ball_train_feet_dis <= 0:
+                            if ball_train_feet_dis < 0:
                                 ballDisBtKnees = abs(ball_train_feet_dis)
                                 print("Ball distance betweeen traning leg are ", ballDisBtKnees)
-                                if ballDisBtKnees <= 0.3*kneesDis:
-                                    ball_release = "Delay"
-                                elif ballDisBtKnees <= 0.5*kneesDis:
+                                if ballDisBtKnees <= 0.20*kneesDis:
+                                    ball_release = "Delayed 2"
+                                else:
                                     ball_release = "Late"
-                                else:
-                                    ball_release = "Very Late"
-                            elif ball_train_feet_dis > 0 and ball_slide_feet_dis <= 0:
+                            elif ball_train_feet_dis > 0 and ball_slide_feet_dis < 0:
                                 ballDisBtKnees = abs(ball_train_feet_dis)
                                 print("Ball distance betweeen traning leg are ", ballDisBtKnees)
-                                if ballDisBtKnees  <= 0.3*kneesDis:
-                                    ball_release = "Delay"
-                                elif ballDisBtKnees <= 0.8*kneesDis:
+                                if ballDisBtKnees  <= 0.20*kneesDis:
+                                    ball_release = "Delayed 2"
+                                elif ballDisBtKnees <= 0.80*kneesDis:
+                                    ball_release = "Delayed 1"
+                                else:
                                     ball_release = "Traditional"
-                                else:
-                                    ball_release = "Early"
                             elif ball_slide_feet_dis > 0:
-                                ballDisBtKnees = abs(ball_slide_feet_dis)
-                                print("Ball distance beyond sliding leg are ", ballDisBtKnees)
-                                if ballDisBtKnees <= 0.2*kneesDis:
-                                    ball_release = "Early"
-                                else:
-                                    ball_release = "Very Early"
+                                ball_release = "Early"
                             self.timingframenumber.append(currentFrame)
                             
             
                 # Append to array
-                feetStuff = pd.DataFrame({'Frame':[currentFrame+1],"LH_X":[l_heel_x],"Velocity": [velo],"Wrist_Y":[r_wrist_y],"Wrist_X":[r_wrist_x],"Acceleration":[acceleration]})
+                feetStuff = pd.DataFrame({'Frame':[currentFrame+1],"LH_X":[l_heel_x],"Velocity": [velo],"Wrist_Y":[r_wrist_y],"Wrist_X":[r_wrist_x]})
                 # feetStuff = {"Frame": currentFrame+1, "LH_X":l_heel_x,"Velocity": velo,"Wrist_Y":r_wrist_y,"Wrist_X":r_wrist_x}
                 feetVelo = pd.concat([feetVelo, feetStuff], ignore_index=True)
                 #============ Annotations onto video ============

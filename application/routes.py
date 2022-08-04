@@ -124,13 +124,21 @@ def upload_file( ):
             try:
                 Timing=mpEstimate().timing(DB_Filepath,name)
                 Timing=str(Timing)
+
                 #perform mediapipe function
                 mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name,Timing)
                 #Inputting file paths
                 thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
-                add_entry(analysisentry)
-                add_entry(thmumbnailentry)   
+                add_entry(thmumbnailentry) 
+                # If no timing, no photo file path
+                if Timing == 'None':
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing)
+                    add_entry(analysisentry)
+                # Else if have timing, got analysed photo filepath
+                else:
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
+                    add_entry(analysisentry)
+                  
                 return redirect(url_for('analysis',videoid=Rawvideo_id))
             except Exception as e:
                 print("exception")

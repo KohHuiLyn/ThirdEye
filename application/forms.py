@@ -13,7 +13,9 @@ class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)])
 
-
+class SearchForm(FlaskForm):
+    searched = StringField('Search', [InputRequired()])
+    submit = SubmitField("Search")
 
 class VideoForm(FlaskForm):
     title = StringField('Title')

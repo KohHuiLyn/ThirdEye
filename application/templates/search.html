@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="videso_section">
+    <div class="videso_tb_details">
+        <div class="container">
+            <div class="vidz_sec">
+                <h4>Searched for: {{search}}</h4>
+                {%if searchVideos|length == 0%}
+                <h5 class="">No videos found!</h5>
+                {%else%}
+                <div class="row mt-2">
+                    <div class="vidz_list">
+                        <div class="row">
+                            {% for hist in searchVideos %}
+                            <!-- Replace each video thumbnail with jinja. Info required: Location, Thumbnail, Time of vid, Vid Title, Date -->
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-6 full_wdth">
+                                <div class="videoo">
+                                    <div class="vid_thumbainl">
+                                        <a href="/analysis/{{hist.RawVideo_id}}" title="">
+                                            <img src="{{url_for('static', filename='' + hist.thumb_path) }}" alt="">
+                                            <!-- <span class="vid-time">0:08</span> -->
+                                        </a>	
+                                    </div><!--vid_thumbnail end-->
+                                    <div class="video_info">
+                                        <h3><a href="/analysis/{{hist.RawVideo_id}}" title="">{{hist.Name}}</a></h3>
+                                        <span>{{hist.Location}} |<small class="posted_dt">{{hist.Date.strftime('%d %h %y %X')}}</small></span>
+                                    </div>
+                                </div><!--videoo end-->
+                            </div>
+                            {% endfor %}
+                        </div> 
+                    </div>
+                </div>
+                {%endif%}
+            </div>
+        </div>
+    </div>
+</section>
+{%endblock%}

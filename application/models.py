@@ -24,7 +24,7 @@ class RawVideo(UserMixin, db.Model):
     # Student_id=db.Column(db.Integer,db.ForeignKey('Students.id'))
     video_path=db.Column(db.String)
     date=db.Column(db.DateTime,nullable=False)
-    Event=db.Column(db.String,nullable=False) #where was this event
+    Location=db.Column(db.String,nullable=False) #where was this event
     Analysis=db.relationship('Analysis',backref='RawVideo')
     Thumbnail=db.relationship('Thumbnail',backref='RawVideo')
     
@@ -36,7 +36,7 @@ class Thumbnail(UserMixin, db.Model):
     RawVideo_id=db.Column(db.Integer,db.ForeignKey('RawVideo.id'))
     thumb_path=db.Column(db.String)
     Date=db.Column(db.DateTime,nullable=False)
-    Event=db.Column(db.String,nullable=False) #where was this event
+    Location=db.Column(db.String,nullable=False) #where was this event
     Name=db.Column(db.String,nullable=False)
     
 class Analysis(UserMixin,db.Model):
@@ -55,3 +55,7 @@ class Parameters(UserMixin,db.Model):
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
     Back_angle=db.Column(db.Integer,nullable=True)
     Feet_length=db.Column(db.Integer,nullable=True)
+
+# class Comment(UserMixin,db.Model):
+#     __tablename__='Comment'
+#     id = 

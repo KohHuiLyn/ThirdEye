@@ -571,7 +571,6 @@ class mpEstimate:
                 
                     cap.set(cv2.CAP_PROP_POS_FRAMES, i)
                     for val in ssDict.values():
-                        print("val ",val)
                         # Making thumbnail
                         if i == 1:
                             cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame) 

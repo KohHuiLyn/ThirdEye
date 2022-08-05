@@ -6,13 +6,13 @@ from matplotlib.image import thumbnail
 from application import app,db
 from application.models import User,Students, RawVideo, Analysis, Parameters, Thumbnail
 from datetime import datetime
-from application.forms import  Back_Form, VideoForm, Feet_Form
+from application.forms import  Back_Form, VideoForm, Feet_Form, SearchForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 # from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for, abort 
 from flask_cors import CORS, cross_origin
-from sqlalchemy import text, func
+from sqlalchemy import text, func, desc, not_, and_
 import pathlib, os
 import requests
 import keras.models
@@ -92,7 +92,7 @@ def upload_file( ):
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             # print("filepath ", DB_Filepath)
-            videoEntry=RawVideo(video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
+            videoEntry=RawVideo(video_path=DB_Filepath,date=datetime.utcnow(),Location=event)
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
             print(Rawvideo_id)
@@ -105,7 +105,7 @@ def upload_file( ):
                 mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
                 # entries = Entry.query.filter_by(user_id=userid)
                 # print("length of backangles", len(backangles) )
-                thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                thumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Location=event,Name=title)
                 add_entry(thumbnailentry)  
                 print("backangles is ",backangles)
                 print("len is ",len(backangles))
@@ -128,7 +128,7 @@ def upload_file( ):
                 #perform mediapipe function
                 mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name,Timing)
                 #Inputting file paths
-                thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+                thmumbnailentry=Thumbnail(RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Location=event,Name=title)
                 add_entry(thmumbnailentry) 
                 # If no timing, no photo file path
                 if Timing == 'None':
@@ -147,22 +147,69 @@ def upload_file( ):
                 return "video"
         
         
-    
 
 @app.errorhandler(500)
 def page_not_found(e):
     # note that we set the 404 status explicitly
     return render_template('500error.html'), 500
-    
 
+
+# History and search videos
 @app.route("/history",methods=['GET'])
-def history():
-    
-    return render_template('history.html',title="Your History", history=gethistory())
+@app.route('/history/<filter>')
+def history(filter=None):
 
+        # if filter == "ba":
+    # Search function
+    search = SearchForm()
+    if request.method == 'GET' and search.validate_on_submit():
+        return redirect((url_for('search_results', query=search.search.data)))  # or what you want
+    if filter:
+        if filter == "t":
+            history = getTiming()  
+            return render_template('history.html',title="Your History", history=history, search=search)
+        elif filter =="ba":
+            history = getBA()
+            return render_template('history.html',title="Your History", history=history, search=search)
+
+        elif filter == None:
+            return render_template('history.html',title="Your History", history=getBA(), search=search)
+
+    return render_template('history.html',title="Your History", history=gethistory(), search=search)
+def getTiming():
+    try:
+        timingVids = db.session.query(Thumbnail).join(Analysis,Analysis.RawVideo_id==Thumbnail.RawVideo_id).filter(Analysis.Ball_release.is_not(None)).all()
+        return timingVids
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
+def getBA():
+    try:
+        baVids = db.session.query(Thumbnail).join(Analysis,Analysis.RawVideo_id==Thumbnail.RawVideo_id).filter(Analysis.Angle.is_not(None)).all()
+        return baVids
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
+@app.route("/search", methods=["POST"])
+def search():
+    search = SearchForm()
+    if search.validate_on_submit():
+        search = search.searched.data
+        searchStr = "%{}%".format(search)
+        return render_template("search.html", form=search, search = search, searchVideos= getSearch(searchStr))
+def getSearch(searchStr):
+    try:
+        video=Thumbnail.query.filter(Thumbnail.Name.like(searchStr)).all()
+        return video
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
 def gethistory():
     try:
-        video=Thumbnail.query.all()
+        video=Thumbnail.query.order_by(desc(Thumbnail.Date)).all()
         return video
     except Exception as error:
         db.session.rollback()

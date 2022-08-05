@@ -57,6 +57,29 @@ class mpEstimate:
     def findX(self,x_knee,x_hand):
         X = x_hand - x_knee
         return X
+
+    def convert_to_avc1(self, input, output, fps: int = 0, frame_size: tuple = (), fourcc: str = "H264"):
+        vidcap = cv2.VideoCapture(input)
+        if not fps:
+            fps = round(vidcap.get(cv2.CAP_PROP_FPS))
+        success, arr = vidcap.read()
+        if not frame_size:
+            height, width, _ = arr.shape
+            frame_size = width, height
+        writer = cv2.VideoWriter(
+            output,
+            apiPreference=0,
+            fourcc=cv2.VideoWriter_fourcc(*fourcc),
+            fps=fps,
+            frameSize=frame_size
+        )
+        while True:
+            if not success:
+                break
+            writer.write(arr)
+            success, arr = vidcap.read()
+        writer.release()
+        vidcap.release()
     
     def timing(self,file_path, name):
         # Choose which video to use
@@ -271,7 +294,7 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'h264') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
@@ -425,6 +448,7 @@ class mpEstimate:
         print('Video is done!')
         cap.release()
         video_output.release()
+        self.convert_to_avc1(f"./application/static/analysedvideo/{name}.mp4", output=f"./application/static/analysedvideo/{name}(avc1).mp4")
         self.TimingOrBack=False
         return self.AngleAtStep
         
@@ -502,6 +526,7 @@ class mpEstimate:
                 ret, frame= cap.read()
             
                 cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+<<<<<<< Updated upstream
                 for val in self.BackCurrentFrameNumber.values():
                     if i == 1:
                         cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)       
@@ -515,3 +540,32 @@ class mpEstimate:
                         x=x+1
                         print('Read a new frame: ', ret)
         
+=======
+                if i == 1:
+                    cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame)
+        else:
+            while bool:
+                for i in range(0,frameLen,1):
+                    if x>=len(ssDict):
+                        bool=False
+                        break
+                    ret, frame= cap.read()
+                
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                    for val in ssDict.values():
+                        # Making thumbnail
+                        if i == 1:
+                            cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame) 
+                        if val is not None:     
+                            if i == val[0] :
+                                print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                                # print("iv2", i)
+                                
+                                print(x)
+                
+                                cv2.imwrite("./application/static/Analysedphoto/frame_%d%s.jpg"%(x,name), frame)     # save frame as JPEG file   
+                                x=x+1
+                                print('Read a new frame: ', ret)
+                        else:
+                            x+=1
+>>>>>>> Stashed changes

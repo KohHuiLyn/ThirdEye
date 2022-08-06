@@ -40,7 +40,7 @@
 									</div>
 									<div class="vc_info pr">
 										<h4><a href="#" title="">ScereBro</a></h4>
-										<span>Published on Oct 22, 2017</span>
+										<span>Published on {{video_info[0].date.strftime('%d %h %y %X')}}</span>
 									</div>
 								</div><!--vcp_inf end-->
 								<div class="clearfix"></div>
@@ -48,26 +48,24 @@
 							<div class="clearfix"></div>
 							<div class="about-ch-sec p-3 mb-2 bg-light text-dark" >
 								<div class="abt-rw">
-									<h4>Student:</h4>
-									<ul>
-										<li><span>Nathan Drake</span></li>
-									</ul>
-								</div>
-								<div class="abt-rw">
 									<h4>Category : </h4>
 									<ul>
-										<li><span>Side View</span></li>
+										{%if analysis|length >1%}
+											<li><span>Back Angle</span></li>
+										{%elif analysis|length==1%}
+											<li><span>Timing</span></li>
+										{% endif %}
 									</ul>
 								</div>
 								<div class="abt-rw">
 									<h4>Location : </h4>
 									<ul>
-										<li><span>Yishun Safra</span></li>
+										<li><span>{{video_info[0].Location}}</span></li>
 									</ul>
 								</div>
 								<div class="abt-rw">
-									<h4>Describe : </h4>
-									<p> Three years after the events of Uncharted 3: Drake's Deception, Nathan Drake, now retired as a fortune hunter, has settled into a normal life with his wife Elena Fisher. His world is then turned upside down when his older brother Sam, long believed to be dead, suddenly reappears seeking Drake's help. </p>
+									<h4>Describe : </h4> 
+									<p>{{analysis[0].Description}}</p>
 								</div>
 							</div><!--about-ch-sec end-->
 						</div><!--abt-mk end-->

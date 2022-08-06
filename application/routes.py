@@ -87,6 +87,7 @@ def upload_file( ):
             videoMethod=form.videoMethod.data #Back or Side
             # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
+            description=form.description.data
             uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
@@ -96,6 +97,7 @@ def upload_file( ):
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
             print(Rawvideo_id)
+            description_conent = str(description)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
@@ -113,10 +115,10 @@ def upload_file( ):
                 # Make the angles null.
                 if len(backangles)==0:
                     for i in range(2):
-                        analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO")
+                        analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_conent)
                         add_entry(analysisentry)
                 for i in range (0,len(backangles),1):    
-                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_conent)
                     add_entry(analysisentry)
                 return redirect(url_for('analysis',videoid=Rawvideo_id))
             elif int(videoMethod)==1:
@@ -132,11 +134,11 @@ def upload_file( ):
                 add_entry(thmumbnailentry) 
                 # If no timing, no photo file path
                 if Timing == 'None':
-                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing)
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_conent)
                     add_entry(analysisentry)
                 # Else if have timing, got analysed photo filepath
                 else:
-                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
+                    analysisentry=Analysis(RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
                     add_entry(analysisentry)
                   
                 return redirect(url_for('analysis',videoid=Rawvideo_id))
@@ -283,14 +285,22 @@ def feet_param():
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
 def analysis(videoid):
     
-    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))
-
+    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid),
+                            video_info = get_relatedVideo(video_id=videoid))
 def get_latestAnalysis(video_id):
     try:
         # analysis = Analysis.query.all()
         analysis=Analysis.query.filter_by(RawVideo_id=video_id).all()
         # print(analysis[0].Video_filepath)
         return analysis
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
+def get_relatedVideo(video_id):
+    try:
+        video_info=RawVideo.query.filter_by(id=video_id).all()
+        return video_info
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 

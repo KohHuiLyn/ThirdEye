@@ -9,7 +9,7 @@ from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, Login
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
-from flask import render_template, request, flash, json, jsonify,redirect,url_for 
+from flask import render_template, request, flash, json, jsonify,redirect,url_for, Markup, Response,render_template_string
 from flask_cors import CORS, cross_origin
 from sqlalchemy import text, func
 import pathlib, os
@@ -29,12 +29,13 @@ import math as m
 import mediapipe as mp
 import redis
 from rq import Queue
+from rq.job import Job
 from application.mediapipePY import mpEstimate
+import ffmpy
 db.create_all()
-
+# conv=Converter(r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe',r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffprobe.exe')
 r=redis.Redis()
 q=Queue(connection=r)
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -134,11 +135,9 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-def testf(DB_Filepath,name,Rawvideo_id,event,title):
+def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
     backangles=mpEstimate().backAngle(DB_Filepath,name)
     print(backangles)
-               
-    
     thumbnailentry=Thumbnail(User_id=1,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     add_entry(thumbnailentry)
     for i in range (0,len(backangles),1):
@@ -146,11 +145,38 @@ def testf(DB_Filepath,name,Rawvideo_id,event,title):
         analysisentry=Analysis(User_id=1,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
         print(analysisentry)
         add_entry(analysisentry)  
-    mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)            
+   
+    ff=ffmpy.FFmpeg(
+        inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
+        outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
+    )
+    ff.run()
+    os.remove('./application/static/analysedvideo/{name}.avi')
+    mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
+    Timing=mpEstimate().timing(DB_Filepath,name)
+    Timing=str(Timing)
+    #perform mediapipe function 
+    ff=ffmpy.FFmpeg(
+        inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
+        outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
+    )
+    ff.run()
+    mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+    os.remove('./application/static/analysedvideo/{name}.avi')
+    #Inputting file paths
+    thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
     
-    return redirect(url_for('analysis',videoid=Rawvideo_id))
+    add_entry(analysisentry)
+    add_entry(thmumbnailentry)    
+    
 
 
+        
+def get_template(refresh=False):
+    return render_template('index.html', refresh=refresh,form=VideoForm())    
+    
 
  
 
@@ -182,25 +208,26 @@ def upload_file( ):
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
-                job=q.enqueue(testf,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="3m")
-                # print(job.status())
-            
+                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")
+                
+                
             elif int(videoMethod)==1:
                 print("FWD Timing")
-                Timing=mpEstimate().timing(DB_Filepath,name)
-                Timing=str(Timing)
-                #perform mediapipe function 
-                mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
-                #Inputting file paths
-                thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
-               
-                add_entry(analysisentry)
-                add_entry(thmumbnailentry)    
-            
-        return redirect(url_for('video'))
-    
+                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")
+                                
+            return redirect(url_for('result',id=job.id,video_id=Rawvideo_id))
 
+
+@app.route('/result/<string:id>/<string:video_id>')
+def result(id,video_id):
+    job = Job.fetch(id, connection=r)
+    status = job.get_status()
+    if status in ['queued', 'started', 'deferred', 'failed']:
+        return get_template( refresh=True)
+    elif status == 'finished':
+        flash(Markup(f'Analysis Complete, go to <a href="/history">History page</a> or click <a href="/analysis/{video_id}">here</a>'))
+        # If this is a string, we can simply return it:
+        return get_template()
     
 
 @app.route("/history",methods=['GET'])

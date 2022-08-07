@@ -26,7 +26,23 @@ Home
       font-size: 1.1em;
     }
 </style>
-
+{% if refresh %}
+        <meta http-equiv="refresh" content="5">
+      {% endif %}
+<div class="container"id="flash">
+  {% with messages=get_flashed_messages() %}
+    {% if messages %}
+      {%for message in messages%}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <span>{{message}}</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {%endfor%}
+    {%endif%}
+  {%endwith%}
+</div>
 <div class="container" id="mainbox">
     <!-- <div class="col">
         <video id="video" width="380" height="240" autoplay></video>
@@ -42,6 +58,7 @@ Home
            <div class="col g-1"> <button class="cameras" id="download-video" download="test.mp4">Download Video</button></div>
         </div>
     </div> -->
+   
     <div class="rounded container-fluid mt-5">
         <div class="row">
           <div class="col-6 bg-dark mx-auto p-5 rounded">

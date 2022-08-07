@@ -69,11 +69,11 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'avc1') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        savingpath="./application/static/analysedvideo/{}.mp4".format(name)
+        savingpath="./application/static/analysedvideo/{}.avi".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
        
@@ -278,11 +278,11 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        savingpath="./application/static/analysedvideo/{}.webm".format(name)
+        savingpath="./application/static/analysedvideo/{}.avi".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
         # Variables for dynamic font size
@@ -548,7 +548,7 @@ class mpEstimate:
                 
                     cap.set(cv2.CAP_PROP_POS_FRAMES, i)
                     for val in ssDict.values():
-                        print("val ",val)
+                        # print("val ",val)
                         # Making thumbnail
                         if i == 1:
                             cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame) 

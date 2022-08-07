@@ -34,7 +34,7 @@ from application.mediapipePY import mpEstimate
 import ffmpy
 db.create_all()
 # conv=Converter(r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe',r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffprobe.exe')
-r=redis.Redis()
+r = redis.from_url(os.environ.get("REDIS_URL"))
 q=Queue(connection=r)
 login_manager = LoginManager()
 login_manager.init_app(app)

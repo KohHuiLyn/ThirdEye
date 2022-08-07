@@ -65,13 +65,13 @@ Home
     </div> -->
     <div class="rounded container-fluid">
         <div class="row">
-          <div class="col-6 mx-auto p-4 mb-3 rounded" style="background-color: #fab270">
+          <div class="col-md-6 col-12 mx-auto p-4 mb-3 rounded" style="background-color: #fab270">
             <form method="POST" action="{{ url_for('upload_file') }}" id="analysisForm" enctype="multipart/form-data"> 
               <fieldset class="form-group text-light font-weight-bold">
                 <div class="mx-auto text-center pb-2"><i class="bi bi-cloud-upload text-light pb-3" style="font-size: 7em"></i></div>
                 <label for="Upload" class="form-label pt-3">Upload Video</label>
                 <br/>
-                <input id="Upload" type="file" name="file" accept="video/*">
+                <input id="Upload" type="file" name="file" accept="video/*, .3gp">
                 <br/>
                 <label for="Title" class="form-label pt-3">Title</label>
                 {{ form.title(id="title",placeholder="Add your title", class="form-control") }}       
@@ -111,8 +111,15 @@ Home
     </div>
     <script>
       function loadModal(){
-        $("#loadingModal").modal({backdrop: "static"});
-        $('#loadingModal').modal('show');
+        title = document.getElementById('title').value
+        if (document.getElementById("Upload").files.length > 0 &&  title!= "") {
+          $("#loadingModal").modal({backdrop: "static"});
+          $('#loadingModal').modal('show');
+          console.log("HERE")
+        }else {
+          console.log("ELSE")
+        }
+
       }
     </script>
 
@@ -134,13 +141,13 @@ Home
     <div class="row pt-3 rounded-top rounded-3" style="color:#3a3c3e" >
         <h2 class="text-center"><strong>How it Works?</strong></h2>
         <div class="row align-items-start">
-            <div class="col d-flex justify-content-center">
+            <div class="col-12 col-md d-flex justify-content-center">
                 <i class="bi bi-camera" style="font-size: 8em;"></i>
             </div>
-            <div class="col d-flex justify-content-center">
+            <div class="col-12 col-md d-flex justify-content-center">
                 <i class="bi bi-upload" style="font-size: 8em;"></i>
             </div>
-            <div class="col d-flex justify-content-center">
+            <div class="col-12 col-md d-flex justify-content-center">
                 <i class="bi bi-list" style="font-size: 8em"></i>
             </div>
           </div>

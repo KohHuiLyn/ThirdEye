@@ -2,9 +2,7 @@
 {% extends "layout.html" %}
 <!-- The block content replace the one encapsulated in  layout.html -->
 {% block content %}
-{%if history|length == 0%}
-<h1 class="text-center mt-5">No videos found! Upload a video in our home page.</h1>
-{%else%}
+
 <section class="videso_section">
     <div class="videso_tb_details">
         <div class="container">
@@ -38,12 +36,14 @@
                     </div>
                     <div class="clearfix"></div>
                 </div>
-                <h3>All Videos</h3>
+                <h3>{{vidType}} Videos</h3>
+                {%if history|length == 0%}
+                <p class="text-center">No videos found! Upload a video in our home page.</p>
+                {%else%}
                 <div class="row mt-2">
                     <div class="vidz_list">
                         <div class="row">
                             {% for hist in history %}
-                            <!-- Replace each video thumbnail with jinja. Info required: Location, Thumbnail, Time of vid, Vid Title, Date -->
                             <div class="col-lg-3 col-md-3 col-sm-6 col-6 full_wdth">
                                 <div class="videoo">
                                     <div class="vid_thumbainl">
@@ -54,7 +54,7 @@
                                     </div><!--vid_thumbnail end-->
                                     <div class="video_info">
                                         <h3><a href="/analysis/{{hist.RawVideo_id}}" title="">{{hist.Name}}</a></h3>
-                                        <span>{{hist.Location}} |<small class="posted_dt">{{hist.Date.strftime('%d %h %y %X')}}</small></span>
+                                        <span>{{hist.Event}} |<small class="posted_dt">{{hist.Date.strftime('%d %h %y %X')}}</small></span>
                                     </div>
                                 </div><!--videoo end-->
                             </div>

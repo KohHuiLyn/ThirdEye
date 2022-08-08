@@ -7,19 +7,21 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)],render_kw={"placeholder":"Username"})
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)],render_kw={"placeholder":"Password"})
     
-
 class RegisterForm(FlaskForm):
     email = StringField('email', validators=[InputRequired(), Email(message='Invalid email'), Length(max=50)],render_kw={"placeholder":"Email"})
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)],render_kw={"placeholder":"Username"})
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)],render_kw={"placeholder":"Password"})
 
-
+class SearchForm(FlaskForm):
+    searched = StringField('Search', [InputRequired()])
+    submit = SubmitField("Search")
 
 class VideoForm(FlaskForm):
-    title = StringField('Title')
+    title = StringField('Title',validators=[InputRequired()])
     videoMethod =SelectField(u"Method",choices=[(0,"Back Angle"),(1,"Timing")],validators=[InputRequired()])
     # event= StringField('Event')
     event = SelectField(u"Method",choices=[("Planet Bowl","Planet Bowl"),("Sonic Bowl","Sonic Bowl")],validators=[InputRequired()])
+    description = StringField('Description')
     submit = SubmitField("Upload")
 
 class Back_Form(FlaskForm):

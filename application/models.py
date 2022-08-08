@@ -19,6 +19,7 @@ class Students(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name=db.Column(db.String,nullable=False)
     # Videos=db.relationship('Video',backref='Student')
+
 class RawVideo(UserMixin, db.Model):
     __tablename__='RawVideo'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
@@ -52,9 +53,14 @@ class Analysis(UserMixin,db.Model):
     Angle=db.Column(db.Integer, nullable=True)
     Ball_release=db.Column(db.String,nullable=True)
     Error_Count=db.Column(db.Integer,nullable=True) 
+    Description=db.Column(db.String,nullable=True)
 
 class Parameters(UserMixin,db.Model):
     __tablename__='Parameters'
     id=db.Column(db.Integer, primary_key=True,autoincrement=True)
     Back_angle=db.Column(db.Integer,nullable=True)
     Feet_length=db.Column(db.Integer,nullable=True)
+
+# class Comment(UserMixin,db.Model):
+#     __tablename__='Comment'
+#     id = 

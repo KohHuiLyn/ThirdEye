@@ -19,8 +19,6 @@ class mpEstimate:
     light_green = (127, 233, 100)
     yellow = (0, 255, 255)
     pink = (255, 0, 255)
-    
-    feetInfo = pd.DataFrame(columns=["Frame","LH_X","LI_X"])
     # From all the Mediapipe Computer Vision Solutions, select to use Mediapipe Pose============================================
     mp_pose = mp.solutions.pose
 
@@ -69,11 +67,11 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'avc1') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        savingpath="./application/static/analysedvideo/{}.avi".format(name)
+        savingpath="./application/static/analysedvideo/{}.mp4".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
        
@@ -85,7 +83,7 @@ class mpEstimate:
 
         # Preparing the dataframes
         # Dataframe to store the Velocity Information
-        feetVelo = pd.DataFrame(columns=["Frame","LH_X","LI_X", "Heel Velo", "Index Velo", "Wrist_Y","Wrist_X"])
+        feetVelo = pd.DataFrame(columns=['Frame', 'LH_X', 'Velocity', 'Wrist_Y', 'Wrist_X','Acceleration'])
 
         # Variables for Timing
         access = 1
@@ -97,7 +95,11 @@ class mpEstimate:
         throwing = False
         throwCount = 0
         fastFeet = False
-        # preFrame_Y=0        
+        # preFrame_Y=0  
+        acceleration_count = 0
+        acceleration = None
+        deceleration = False
+        allFufill = False
         
         currentFrame= 0
         mp_drawing = mp.solutions.drawing_utils
@@ -172,7 +174,14 @@ class mpEstimate:
                     preFrameIndex = len(feetVelo.index)-3
                     # If the index isn't negative, can extract out for formula.
                     diffBtY = r_wrist_y - feetVelo["Wrist_Y"][preFrameIndex]
-                # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
+                    # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
+                    
+                    #Calculate Velocity with this frame and 3 frames before
+                    preIndex = len(feetVelo.index)-3
+                    pre = currentFrame-4
+                    velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame - pre)))
+
+                # Check bowler's action whether ready to slide and throw
                 if diffBtY > 0 and r_shldr_x>r_wrist_x:
                     throwCount = throwCount+1
                     if throwCount == 3:
@@ -180,47 +189,62 @@ class mpEstimate:
                 else:
                     throwCount = 0 
 
-                if (feetDist > 2*maxFeetLength and throwing == True) or sliding==True :
+                # Check whether bowler start to deceleration (stop sliding)
+                if feetDist > 1.8*maxFeetLength and throwing == True:
+                    acceleration = (velo-feetVelo["Velocity"][preIndex])/(currentFrame - pre)
+                    if acceleration < 0:
+                        acceleration_count = acceleration_count + 1
+                        if acceleration_count == 4:
+                            # This deleceration just for understanding purpose
+                            deceleration = True
+                            # This allFufill means all requirements(maxfeetDis, throwing, deceleration) are fufill
+                            allFufill = True
+                    else:
+                        acceleration_count = 0
+
+                if allFufill == True or sliding==True :
                     sliding=True
                     # currentFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                    preIndex = len(feetVelo.index)-3
-                    pre = currentFrame-4
                     if len(feetVelo.index) > 4:
-                        # Calculate Velocity with this frame and 4 frames before
-                        velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame-pre)))
-                        if velo > 3:
-                            fastFeet = True
-                        if velo < 0.6 and access == 1 and fastFeet == True:
+                        if velo < 0.6 and access == 1:
                             kneesDis = abs(r_knee_x - l_knee_x)
                             print("distance between knee are ", kneesDis)
                             access = 0
                             ball_train_feet_dis = self.findX(r_knee_x, r_wrist_x)
                             ball_slide_feet_dis = self.findX(l_knee_x, r_wrist_x)
                             # Calculate distance between hand and knees to determine ball release type
-                            if ball_train_feet_dis < 0:
+                            if ball_train_feet_dis <= 0:
                                 ballDisBtKnees = abs(ball_train_feet_dis)
                                 print("Ball distance betweeen traning leg are ", ballDisBtKnees)
-                                if ballDisBtKnees <= 0.20*kneesDis:
-                                    ball_release = "Delayed 2"
-                                else:
+                                if ballDisBtKnees <= 0.3*kneesDis:
+                                    ball_release = "Delay"
+                                elif ballDisBtKnees <= 0.5*kneesDis:
                                     ball_release = "Late"
-                            elif ball_train_feet_dis > 0 and ball_slide_feet_dis < 0:
+                                else:
+                                    ball_release = "Very Late"
+                            elif ball_train_feet_dis > 0 and ball_slide_feet_dis <= 0:
                                 ballDisBtKnees = abs(ball_train_feet_dis)
                                 print("Ball distance betweeen traning leg are ", ballDisBtKnees)
-                                if ballDisBtKnees  <= 0.20*kneesDis:
-                                    ball_release = "Delayed 2"
-                                elif ballDisBtKnees <= 0.80*kneesDis:
-                                    ball_release = "Delayed 1"
-                                else:
+                                if ballDisBtKnees  <= 0.3*kneesDis:
+                                    ball_release = "Delay"
+                                elif ballDisBtKnees <= 0.8*kneesDis:
                                     ball_release = "Traditional"
+                                else:
+                                    ball_release = "Early"
                             elif ball_slide_feet_dis > 0:
-                                ball_release = "Early"
+                                ballDisBtKnees = abs(ball_slide_feet_dis)
+                                print("Ball distance beyond sliding leg are ", ballDisBtKnees)
+                                if ballDisBtKnees <= 0.2*kneesDis:
+                                    ball_release = "Early"
+                                else:
+                                    ball_release = "Very Early"
                             self.timingframenumber.append(currentFrame)
                             
             
                 # Append to array
-                feetStuff = {"Frame": currentFrame+1, "LH_X":l_heel_x,"Velocity": velo,"Wrist_Y":r_wrist_y,"Wrist_X":r_wrist_x}
-                feetVelo = feetVelo.append(feetStuff, ignore_index=True)
+                feetStuff = pd.DataFrame({'Frame':[currentFrame+1],"LH_X":[l_heel_x],"Velocity": [velo],"Wrist_Y":[r_wrist_y],"Wrist_X":[r_wrist_x],"Acceleration":[acceleration]})
+                # feetStuff = {"Frame": currentFrame+1, "LH_X":l_heel_x,"Velocity": velo,"Wrist_Y":r_wrist_y,"Wrist_X":r_wrist_x}
+                feetVelo = pd.concat([feetVelo, feetStuff], ignore_index=True)
                 #============ Annotations onto video ============
                 # Define font size 
                 if h >= 2160 and self.font_access == 1:
@@ -278,15 +302,14 @@ class mpEstimate:
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG') #for mp4 video to be played in website
+        fourcc = cv2.VideoWriter_fourcc(*'h264') #for mp4 video to be played in website
         print("main ", type(name))
         # Initialize video writer. might take a look at this again.
         # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
-        savingpath="./application/static/analysedvideo/{}.avi".format(name)
+        savingpath="./application/static/analysedvideo/{}.mp4".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
         # Variables for dynamic font size
-        print(os.getcwd())
         
 
         # Variables for Step Counter
@@ -548,7 +571,6 @@ class mpEstimate:
                 
                     cap.set(cv2.CAP_PROP_POS_FRAMES, i)
                     for val in ssDict.values():
-                        # print("val ",val)
                         # Making thumbnail
                         if i == 1:
                             cv2.imwrite("./application/static/Thumbnail/frame_%d%s.jpg"%(x,name), frame) 

@@ -11,7 +11,7 @@
 					<div class="mn-vid-sc single_video">
 						<div class="vid-1">
 							<h2>
-								{{analysis[0].Name}}
+								{{analysis[0].Name[:-19]}}
 							</h2>
 							<br>
 							<div style = "width:100%">
@@ -40,7 +40,7 @@
 									</div>
 									<div class="vc_info pr">
 										<h4><a href="#" title="">ScereBro</a></h4>
-										<span>Published on Oct 22, 2017</span>
+										<span>Published on {{video_info[0].date.strftime('%d %h %y %X')}}</span>
 									</div>
 								</div><!--vcp_inf end-->
 								<div class="clearfix"></div>
@@ -48,26 +48,24 @@
 							<div class="clearfix"></div>
 							<div class="about-ch-sec p-3 mb-2 bg-light text-dark" >
 								<div class="abt-rw">
-									<h4>Student:</h4>
-									<ul>
-										<li><span>Nathan Drake</span></li>
-									</ul>
-								</div>
-								<div class="abt-rw">
 									<h4>Category : </h4>
 									<ul>
-										<li><span>Side View</span></li>
+										{%if analysis|length >1%}
+											<li><span>Back Angle</span></li>
+										{%elif analysis|length==1%}
+											<li><span>Timing</span></li>
+										{% endif %}
 									</ul>
 								</div>
 								<div class="abt-rw">
 									<h4>Location : </h4>
 									<ul>
-										<li><span>Yishun Safra</span></li>
+										<li><span>{{video_info[0].Event}}</span></li>
 									</ul>
 								</div>
 								<div class="abt-rw">
-									<h4>Describe : </h4>
-									<p> Three years after the events of Uncharted 3: Drake's Deception, Nathan Drake, now retired as a fortune hunter, has settled into a normal life with his wife Elena Fisher. His world is then turned upside down when his older brother Sam, long believed to be dead, suddenly reappears seeking Drake's help. </p>
+									<h4>Describe : </h4> 
+									<p>{{analysis[0].Description}}</p>
 								</div>
 							</div><!--about-ch-sec end-->
 						</div><!--abt-mk end-->
@@ -76,21 +74,32 @@
 		</div>
 	</section><!--mn-sec end-->
 
-	<div class="container p-3 mb-2 bg-light text-dark">
+	<div id = "analDiv" class="container p-3 mb-2 bg-light text-dark">
 		<h3 class="pb-3" style="font-size:30px">Model Analysis Result</h3>
-	{%if analysis|length ==5%}
+	{%if analysis|length >1%}
+	{% set count= namespace(value=0)%}
 		{% for anal in analysis %}
+			{%if anal.Photo_filepath == "NO_PHOTO"%}
+				{%set count.value = count.value + 1%}
+			{%else%}
 			<h4>Back Angle: {{anal.Angle}}</h4>
 			<img class="w-50 h-50 pb-2"src="{{url_for('static', filename='' + anal.Photo_filepath) }}" alt="SSIMAGE"/>
+			{%endif%}
+			{%if count.value == 2 %}
+				<h4>No Back Angle Detected!</h4>
+			{%endif%}
 		{% endfor %}
 	{%elif analysis|length==1%}
+		{%if analysis[0].Photo_filepath == "NO_PHOTO"%}
+			<h4>Ball Release Detection failed! Please try another video.</h4>
+		{%else%}
 		<div class="row">
 			<img class="w-50 h-50 pb-2 col-md-6"src="{{url_for('static', filename='' + analysis[0].Photo_filepath) }}" alt="SSIMAGE"/>
 			<h4 class="col-md-6">Ball Release Type: <br> 
-				<small class="text-muted">{{analysis[0].Ball_release}}</small>
+				<small  class="text-muted">{{analysis[0].Ball_release}}</small>
 			</h4>
 		</div>
-		
+		{%endif%}
 	{% endif %}
 
 		
@@ -196,7 +205,25 @@
 	</section>
 
 </div><!--wrapper end-->
+<script>
+	// For no ball release type found
+	$(document).ready(function (){
+		// // no back angle found
+		// backAngle = $("#analDiv").innerHTML
+		// console.log(backAngle)
+		// if ($("#analDiv img").length==2 && backAngle.includes('Back Angle: None')){
+		// 	console.log(" IM HERee!")
+		// 	$("#analDiv img").remove()
+		// 	$("#analDiv h4").remove()
+		// 	$("#analDiv").append("<p>Error: No back angle detected! Please try another video!</p>")
+		// }else {
+		// 	console.log("guys...")
+		// }
+	})
 
+
+
+</script>
 <!-- <script src="{{ url_for('static',filename='js/jquery.min.js')}}"></script>
 <script src="{{ url_for('static',filename='js/popper.js')}}"></script>
 <script src="{{ url_for('static',filename='js/bootstrap.min.js')}}"></script>

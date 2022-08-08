@@ -47,8 +47,28 @@ Home
     }
 </style>
 
+
 <section id="home_section">
 <div class="container pt-5 pb-5" id="mainbox">
+
+{% if refresh %}
+        <meta http-equiv="refresh" content="5">
+      {% endif %}
+<div class="container"id="flash">
+  {% with messages=get_flashed_messages() %}
+    {% if messages %}
+      {%for message in messages%}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <span>{{message}}</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {%endfor%}
+    {%endif%}
+  {%endwith%}
+</div>
+<div class="container" id="mainbox">
     <!-- <div class="col">
         <video id="video" width="380" height="240" autoplay></video>
        <div class="row" id="camerarow">
@@ -63,7 +83,9 @@ Home
            <div class="col g-1"> <button class="cameras" id="download-video" download="test.mp4">Download Video</button></div>
         </div>
     </div> -->
-    <div class="rounded container-fluid">
+
+   
+    <div class="rounded container-fluid mt-5">
         <div class="row">
           <div class="col-md-6 col-12 mx-auto p-4 mb-3 rounded" style="background-color: #fab270">
             <form method="POST" action="{{ url_for('upload_file') }}" id="analysisForm" enctype="multipart/form-data"> 

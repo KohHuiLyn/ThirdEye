@@ -19,4 +19,4 @@ __pycache__
 .gitlab-ci.yml
 database.db
 nohup.out
-
+*.rdb

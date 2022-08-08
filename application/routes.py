@@ -1,7 +1,6 @@
 import email
 from unicodedata import name
 from webbrowser import get
-
 from matplotlib.image import thumbnail
 from application import app,db
 from application.models import Users,Students, RawVideo, Analysis, Parameters, Thumbnail
@@ -10,8 +9,8 @@ from application.forms import  Back_Form, VideoForm, Feet_Form, SearchForm, Logi
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
-# from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
-from flask import render_template, request, flash, json, jsonify,redirect,url_for, abort 
+from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
+from flask import render_template, request, flash, json, jsonify,redirect,url_for, Markup, Response,render_template_string,abort
 from flask_cors import CORS, cross_origin
 from sqlalchemy import text, func, desc, not_, and_
 import pathlib, os
@@ -29,8 +28,52 @@ import cv2
 import time
 import math as m
 import mediapipe as mp
+import redis
+from rq import Queue
+from rq.job import Job
 from application.mediapipePY import mpEstimate
+import ffmpy
 db.create_all()
+# conv=Converter(r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe',r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffprobe.exe')
+#For Deploy
+r = redis.from_url(os.environ.get("REDIS_URL"))
+#For Local 
+# r=redis.Redis()
+q=Queue(connection=r)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+app.secret_key = 'extremely secretive!'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+#Function for INSERT into database
+def add_entry(new_entry):
+    try:
+        db.session.add(new_entry)
+        db.session.commit()
+        print("success")
+        return new_entry.id
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger")
+
+
+
+#Creating Default User
+def create_users():
+    print("fn start")
+    if Users.query.filter_by(username="admin").first() is None:
+        print("adding user")
+        hashed_password1 = generate_password_hash("Password", method='sha256')
+        userentry1=Users(username="admin",email="admin@gmail.com",password=hashed_password1)
+        add_entry(userentry1)
+create_users()
+
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -84,8 +127,13 @@ if not RawisExist:
     os.makedirs(rawpath)
     print("rawvideo folder is created!")
 
-# Login Page
-@app.route('/',methods=['GET','POST'])
+
+
+
+
+
+
+@app.route("/",methods=['GET','POST'])
 def login():
     form=LoginForm()
     if form.validate_on_submit():
@@ -102,15 +150,15 @@ def login():
 
     return render_template('login.html',form=form)
 
+
 # Logout
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect('/')
-# Home page (upload video)
+
 @app.route('/video',methods=['GET','POST'])
-@login_required
 def video():
     form=VideoForm()
     # files = os.listdir(app.config['UPLOAD_PATH'])
@@ -126,6 +174,60 @@ def add_entry(new_entry):
     except Exception as error:
         db.session.rollback()
         flash(error,"danger")
+
+
+def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
+    backangles=mpEstimate().backAngle(DB_Filepath,name)
+    print(backangles)
+    thumbnailentry=Thumbnail(User_id=1,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    add_entry(thumbnailentry)
+   # If no backangles detected, insert record with length of 2, so that website won't confuse with Ball Release, which has length of 1.
+                # Make the angles null.
+    if len(backangles)==0:
+        for i in range(2):
+            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_conent)
+            add_entry(analysisentry)
+    for i in range (0,len(backangles),1):    
+        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_conent)
+        add_entry(analysisentry)
+    ff=ffmpy.FFmpeg(
+        inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
+        outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
+    )
+    ff.run()
+    os.remove('./application/static/analysedvideo/{name}.avi')
+    mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+    
+    
+def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
+    Timing=mpEstimate().timing(DB_Filepath,name)
+    Timing=str(Timing)
+    #perform mediapipe function 
+    ff=ffmpy.FFmpeg(
+        inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
+        outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
+    )
+    ff.run()
+    mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+    os.remove('./application/static/analysedvideo/{name}.avi')
+    #Inputting file paths
+    thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    add_entry(thmumbnailentry)  
+    if Timing == 'None':
+            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_conent)
+            add_entry(analysisentry)
+                # Else if have timing, got analysed photo filepath
+    else:
+        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
+        add_entry(analysisentry)
+    
+
+
+        
+def get_template(refresh=False):
+    return render_template('index.html', refresh=refresh,form=VideoForm())    
+    
+
 
 # Register page
 @app.route('/signup', methods=['GET', 'POST'])
@@ -161,66 +263,39 @@ def upload_file( ):
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             # print("filepath ", DB_Filepath)
-            videoEntry=RawVideo(User_id=current_user.id, video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
+
+            videoEntry=RawVideo(User_id=current_user.id,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
-            print(Rawvideo_id)
-            description_conent = str(description)
+            # print(Rawvideo_id)
+            title=re.sub("[\s/]","-",title)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
-                backangles=mpEstimate().backAngle(DB_Filepath,name)#name supposed to be a variable
-                
-                # print("backangles ", backangles)
-                mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)#name supposed to be a variable.
-                # entries = Entry.query.filter_by(user_id=userid)
-                # print("length of backangles", len(backangles) )
-                thumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                add_entry(thumbnailentry)  
-                print("backangles is ",backangles)
-                print("len is ",len(backangles))
-                # If no backangles detected, insert record with length of 2, so that website won't confuse with Ball Release, which has length of 1.
-                # Make the angles null.
-                if len(backangles)==0:
-                    for i in range(2):
-                        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_conent)
-                        add_entry(analysisentry)
-                for i in range (0,len(backangles),1):    
-                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_conent)
-                    add_entry(analysisentry)
-                return redirect(url_for('analysis',videoid=Rawvideo_id))
+                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")            
             elif int(videoMethod)==1:
                 print("FWD Timing")
-            try:
-                Timing=mpEstimate().timing(DB_Filepath,name)
-                Timing=str(Timing)
+                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")
+                                
+            return redirect(url_for('result',id=job.id,video_id=Rawvideo_id))
 
-                #perform mediapipe function
-                mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name,Timing)
-                #Inputting file paths
-                thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-                add_entry(thmumbnailentry) 
-                # If no timing, no photo file path
-                if Timing == 'None':
-                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_conent)
-                    add_entry(analysisentry)
-                # Else if have timing, got analysed photo filepath
-                else:
-                    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
-                    add_entry(analysisentry)
-                  
-                return redirect(url_for('analysis',videoid=Rawvideo_id))
-            except Exception as e:
-                print("exception")
-                print(e)
-                abort(500) 
-                return "video"
-        
+
+@app.route('/result/<string:id>/<string:video_id>')
+def result(id,video_id):
+    job = Job.fetch(id, connection=r)
+    status = job.get_status()
+    if status in ['queued', 'started', 'deferred', 'failed']:
+        return get_template( refresh=True)
+    elif status == 'finished':
+        flash(Markup(f'Analysis Complete, go to <a href="/history">History page</a> or click <a href="/analysis/{video_id}">here</a>'))
+        # If this is a string, we can simply return it:
+        return get_template()
 # Not found
 @app.errorhandler(500)
 def page_not_found(e):
     # note that we set the 404 status explicitly
-    return render_template('500error.html'), 500
+    return render_template('500error.html'), 500    
+
 
 # History and search videos
 @app.route("/history",methods=['GET'])

@@ -8,9 +8,9 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)],render_kw={"placeholder":"Password"})
     
 class RegisterForm(FlaskForm):
-    email = StringField('email', validators=[InputRequired(), Email(message='Invalid email'), Length(max=50)])
-    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)])
-    password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)])
+    email = StringField('email', validators=[InputRequired(), Email(message='Invalid email'), Length(max=50)],render_kw={"placeholder":"Email"})
+    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)],render_kw={"placeholder":"Username"})
+    password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=80)],render_kw={"placeholder":"Password"})
 
 class SearchForm(FlaskForm):
     searched = StringField('Search', [InputRequired()])

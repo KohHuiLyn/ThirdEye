@@ -73,9 +73,9 @@ body {
     font-weight: 400;
 	overflow-x: hidden;
 }
-ul {
+/* ul {
 	list-style: none;
-}
+} */
 a:hover {
 	text-decoration: none;
 	color: #4a90e2;

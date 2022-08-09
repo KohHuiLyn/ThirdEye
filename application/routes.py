@@ -5,13 +5,13 @@ from matplotlib.image import thumbnail
 from application import app,db
 from application.models import Users,Students, RawVideo, Analysis, Parameters, Thumbnail
 from datetime import datetime
-from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, LoginForm,RegisterForm
+from application.forms import  Back_Form, LoginForm, VideoForm, Feet_Form, LoginForm,RegisterForm, SearchForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager,  login_user, login_required, logout_user, current_user
 from flask import render_template, request, flash, json, jsonify,redirect,url_for, Markup, Response,render_template_string
 from flask_cors import CORS, cross_origin
-from sqlalchemy import text, func
+from sqlalchemy import text, func,desc, not_, and_
 import pathlib, os
 import requests
 import keras.models
@@ -186,7 +186,11 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
 
         
 def get_template(refresh=False):
-    return render_template('history.html', refresh=refresh,form=VideoForm())    
+    # Search function
+    search = SearchForm()
+    if request.method == 'GET' and search.validate_on_submit():
+        return redirect((url_for('search_results', query=search.search.data)))  # or what you want
+    return render_template('history.html', refresh=refresh,form=VideoForm(),search=search)    
     
 
  
@@ -206,6 +210,7 @@ def upload_file( ):
             videoMethod=form.videoMethod.data #Back or Side
             # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
+            description=form.description.data
             uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
@@ -240,11 +245,61 @@ def result(id,video_id):
         # If this is a string, we can simply return it:
         return get_template()
     
+@app.route("/search", methods=["POST"])
+def search():
+    search = SearchForm()
+    if search.validate_on_submit():
+        search = search.searched.data
+        searchStr = "%{}%".format(search)
+        return render_template("search.html", form=search, search = search, searchVideos= getSearch(searchStr))
+def getSearch(searchStr):
+    try:
+        video=Thumbnail.query.filter(Thumbnail.Name.like(searchStr)).all()
+        return video
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
 
+# History and search videos
 @app.route("/history",methods=['GET'])
-def history():
-    
-    return render_template('history.html',title="Your History", history=gethistory())
+@app.route('/history/<filter>')
+@login_required
+def history(filter=None):
+
+        # if filter == "ba":
+    # Search function
+    search = SearchForm()
+    if request.method == 'GET' and search.validate_on_submit():
+        return redirect((url_for('search_results', query=search.search.data)))  # or what you want
+    if filter:
+        if filter == "t":
+            history = getTiming()  
+            return render_template('history.html',title="Your History", history=history, search=search, vidType="Timing")
+        elif filter =="ba":
+            history = getBA()
+            return render_template('history.html',title="Your History", history=history, search=search, vidType="Back Angle")
+
+        elif filter == None:
+            return render_template('history.html',title="Your History", history=getBA(), search=search, vidType="All")
+
+    return render_template('history.html',title="Your History", history=gethistory(), search=search, vidType="All")
+def getTiming():
+    try:
+        timingVids = db.session.query(Thumbnail).join(Analysis,Analysis.RawVideo_id==Thumbnail.RawVideo_id).filter(and_(Analysis.Ball_release.is_not(None), Analysis.User_id==current_user.id)).order_by(Thumbnail.Date.desc()).all()
+        return timingVids
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return []
+def getBA():
+    try:
+        baVids = db.session.query(Thumbnail).join(Analysis,Analysis.RawVideo_id==Thumbnail.RawVideo_id).filter(and_(Analysis.Angle.is_not(None), Analysis.User_id==current_user.id)).order_by(Thumbnail.Date.desc()).all()
+        return baVids
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return []
 
 def gethistory():
     try:
@@ -318,7 +373,8 @@ def feet_param():
 @app.route("/analysis/<videoid>",methods=['GET','POST'])
 def analysis(videoid):
     
-    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid))
+    return render_template('analysis.html',title="Your Analysis", analysis = get_latestAnalysis(video_id=videoid),
+                            video_info = get_relatedVideo(video_id=videoid))
 
 def get_latestAnalysis(video_id):
     try:
@@ -327,6 +383,14 @@ def get_latestAnalysis(video_id):
         
         # print(analysis[0].Video_filepath)
         return analysis
+    except Exception as error:
+        db.session.rollback()
+        flash(error,"danger") 
+        return 0
+def get_relatedVideo(video_id):
+    try:
+        video_info=RawVideo.query.filter_by(id=video_id, User_id=current_user.id).all()
+        return video_info
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 

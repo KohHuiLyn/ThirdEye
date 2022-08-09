@@ -6,6 +6,23 @@ Home
 {% endblock %}
 {% block content %}
 <style>
+    .featured-area {
+      background-color: #fff;
+    }
+
+    .featured-area h2 {
+      font-size: 36px;
+      font-weight: 100;
+    }
+
+    .featured-area h2 span {
+      font-weight: 600;
+    }
+
+    .featured-area p {
+      margin-top: 25px;
+      margin-bottom: 25px;
+    }
     #mainbox{
             position:relative;
             display:flex;
@@ -25,8 +42,14 @@ Home
     label {
       font-size: 1.1em;
     }
+    #home_section{
+      background: rgba(0,0,0,.35) url(../static/images/bg.jpeg);
+      background-size: 100% 100%;
+      background-blend-mode: darken;
+    }
 </style>
 
+<section id="home_section">
 <div class="container"id="flash">
   {% with messages=get_flashed_messages() %}
     {% if messages %}
@@ -59,9 +82,9 @@ Home
    
     <div class="rounded container-fluid mt-5">
         <div class="row">
-          <div class="col-6 bg-dark mx-auto p-5 rounded">
+          <div class="col-md-6 col-12 mx-auto p-4 mb-3 rounded" style="background-color: #fab270">
             <form method="POST" action="{{ url_for('upload_file') }}" id="analysisForm" enctype="multipart/form-data"> 
-              <fieldset class="form-group text-light">
+              <fieldset class="form-group text-light font-weight-bold">
                 <div class="mx-auto text-center pb-2"><i class="bi bi-cloud-upload text-light pb-3" style="font-size: 7em"></i></div>
                 <label for="Upload" class="form-label pt-3">Upload Video</label>
                 <br/>
@@ -76,8 +99,10 @@ Home
                 {% for error in form.videoMethod.errors %}
                 <span class="error-message">{{ error }}</span>
                 {% endfor %}
+                <label for="Description" class = "form-label pt-3">Description</label>
+                {{ form.description(id="description", class="form-control")}}
                 <label for="submit" class="form-label pt-3"></label>
-                {{ form.submit(class='form-control', onclick="loadModal();") }}
+                {{ form.submit(class='form-control btn btn-success', onclick="loadModal();") }}
               </fieldset>
               
             </form>
@@ -116,6 +141,101 @@ Home
             
        
 </div>
+</section>
+
+<!--Instruction  {{url_for('static', filename='images/back_angle_example.gif') }}-->
+<section class="featured-area pt-100 pb-100" style="background-image: linear-gradient( #f4c2ace8, #c49a97e8);">
+  <!-- Instructions -->
+  <div class="container-fluid" id="instructionsDiv">
+    <div class="row pt-3 rounded-top rounded-3" style="color:#3a3c3e" >
+        <h2 class="text-center"><strong>How it Works?</strong></h2>
+        <div class="row align-items-start">
+            <div class="col-12 col-md d-flex justify-content-center">
+                <i class="bi bi-camera" style="font-size: 8em;"></i>
+            </div>
+            <div class="col-12 col-md d-flex justify-content-center">
+                <i class="bi bi-upload" style="font-size: 8em;"></i>
+            </div>
+            <div class="col-12 col-md d-flex justify-content-center">
+                <i class="bi bi-list" style="font-size: 8em"></i>
+            </div>
+          </div>
+        <div class="row">
+            <div class="col d-flex justify-content-center">
+                <h1 >&#10102;</h1>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <h1 >&#10103;</h1>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <h1 >&#10104;</h1>
+            </div>
+        </div>
+        <div class="row pt-3 mb-4">
+            <div class="col d-flex justify-content-center">
+                <h3 class="text-center"><strong>Take a video</strong></h3>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <h3 class="text-center"><strong>Upload the video</strong></h3>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <h3 class="text-center"><strong>View your results</strong></h3>
+            </div>
+        </div>
+    </div>
+  </div>
+  <!--End-->
+  <div class="container pt-5 pb-5">
+  <div class="row align-items-center">
+  <div class="col-md-6">
+  <div class="feature-left">
+  <h3><strong>Back Angle</strong> Video Example</h3>
+  <ul>
+    <li>The camera should follow the bowler in a line throughout</li>
+    <li>A single bowler in frame</li>
+    <li>Full view of the bowler</li>
+    <li>Minimal occlusions (Obstructed by ball dispenser)</li>
+    <li>Take video at 60 FPS</li>
+    <li>Videos should be taken in landscape orientation</li>
+  </ul>
+  </div>
+  </div>
+  <div class="col-md-6">
+  <div class="feature-right active-feature-carousel">
+  <div class="single-slider item">
+  <img src="{{url_for('static', filename='images/back_angle_example.gif') }}" alt="back angle example" style="width: 100%;">
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+
+  <div class="container pb-5">
+    <div class="row align-items-center">
+    <div class="col-md-6">
+    <div class="feature-left">
+    <h3><strong>Timing</strong> Video Example</h3>
+    <ul>
+      <li>The camera should remain in the final position of the bowler's serve without moving</li>
+      <li>A single bowler in frame</li>
+      <li>Full view of the bowler</li>
+      <li>Minimal occlusions (Obstructed by ball dispenser)</li>
+      <li>Take video at 60 FPS</li>
+      <li>Videos should be taken in landscape orientation</li>
+    </ul>
+    </div>
+    </div>
+    <div class="col-md-6">
+    <div class="feature-right active-feature-carousel">
+    <div class="single-slider item">
+    <img src="{{url_for('static', filename='images/timing_example.gif') }}" alt="timing example" style="width: 100%;">
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+  </section>
+<!--Instruction End-->
 
 
 

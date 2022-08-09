@@ -183,7 +183,9 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
         analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
         add_entry(analysisentry) 
     
-
+def uploadVideo(uploaded_file,filename):
+    uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
+    
 
         
 def get_template(refresh=False):
@@ -207,25 +209,23 @@ def upload_file( ):
             videoMethod=form.videoMethod.data #Back or Side
             # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
-            uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
+            Rawvideo_id=add_entry(videoEntry)
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
-            # print("filepath ", DB_Filepath)
-            videoEntry=RawVideo(User_id=1,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
-            # Adding into database
-            Rawvideo_id=add_entry(videoEntry)
-            # print(Rawvideo_id)
+            videoEntry=RawVideo(User_id=current_user.id,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             title=re.sub("[\s/]","-",title)
-            name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
+            name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) 
+            job1=q.enqueue(uploadVideo,args=(uploaded_file,filename),timeout="2h")
+            
             if int(videoMethod)==0:
                 print("FWD BACK")
-                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
+                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h",depends_on=job1)
                 
                 
             elif int(videoMethod)==1:
                 print("FWD Timing")
-                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
+                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h",depends_on=job1)
                                 
             return redirect(url_for('result',id=job.id,video_id=Rawvideo_id))
 

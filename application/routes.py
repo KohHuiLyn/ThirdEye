@@ -33,8 +33,8 @@ from rq.job import Job
 from application.mediapipePY import mpEstimate
 import ffmpy
 db.create_all()
-# r = redis.from_url(os.environ.get("REDIS_URL"))
-r=redis.Redis()
+r = redis.from_url(os.environ.get("REDIS_URL"))
+# r=redis.Redis()
 q=Queue(connection=r)
 login_manager = LoginManager()
 login_manager.init_app(app)

@@ -145,19 +145,23 @@ def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
     print(backangles)
     thumbnailentry=Thumbnail(User_id=1,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     add_entry(thumbnailentry)
-    for i in range (0,len(backangles),1):
-        print(backangles[i])
-        analysisentry=Analysis(User_id=1,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]))
-        print(analysisentry)
-        add_entry(analysisentry)  
-   
+   # If no backangles detected, insert record with length of 2, so that website won't confuse with Ball Release, which has length of 1.
+                # Make the angles null.
+    if len(backangles)==0:
+        for i in range(2):
+            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_conent)
+            add_entry(analysisentry)
+    for i in range (0,len(backangles),1):    
+        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_conent)
+        add_entry(analysisentry)
     ff=ffmpy.FFmpeg(
         inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
         outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
     )
     ff.run()
-    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
+    os.remove('./application/static/analysedvideo/{name}.avi')
     mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+    
 def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
     Timing=mpEstimate().timing(DB_Filepath,name)
     Timing=str(Timing)
@@ -168,13 +172,17 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
     )
     ff.run()
     mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
-    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
+    os.remove('./application/static/analysedvideo/{name}.avi')
     #Inputting file paths
     thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
-    analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)
-    
-    add_entry(analysisentry)
-    add_entry(thmumbnailentry)    
+    add_entry(thmumbnailentry)  
+    if Timing == 'None':
+            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_conent)
+            add_entry(analysisentry)
+                # Else if have timing, got analysed photo filepath
+    else:
+        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
+        add_entry(analysisentry) 
     
 
 

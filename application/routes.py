@@ -232,7 +232,7 @@ def upload_file( ):
 
 @app.route('/result/<string:id>/<string:video_id>')
 def result(id,video_id):
-    job = Job.fetch(id, connection=r)
+    job = Job.fetch(id, connection=conn)
     status = job.get_status()
     if status in ['queued', 'started', 'deferred', 'failed']:
         return get_template( refresh=True)

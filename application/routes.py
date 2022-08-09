@@ -32,10 +32,9 @@ from rq import Queue
 from rq.job import Job
 from application.mediapipePY import mpEstimate
 import ffmpy
+from worker import conn
 db.create_all()
-r = redis.from_url(os.environ.get("REDIS_URL"))
-# r=redis.Redis()
-q=Queue(connection=r)
+q=Queue(connection=conn)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'

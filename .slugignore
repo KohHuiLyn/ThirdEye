@@ -14,7 +14,7 @@ env
 venv
 .vscode
 __pycache__
-database.db
+
 .gitignore
 *.pyc
 *.rdb

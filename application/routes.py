@@ -33,8 +33,8 @@ from rq.job import Job
 from application.mediapipePY import mpEstimate
 import ffmpy
 db.create_all()
-# conv=Converter(r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe',r'C:\Users\mynam\OneDrive\Desktop\y3s1\FYP\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffprobe.exe')
-r = redis.from_url(os.environ.get("REDIS_URL"))
+# r = redis.from_url(os.environ.get("REDIS_URL"))
+r=redis.Redis()
 q=Queue(connection=r)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -151,7 +151,7 @@ def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
         outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
     )
     ff.run()
-    os.remove('./application/static/analysedvideo/{name}.avi')
+    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
 def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
     Timing=mpEstimate().timing(DB_Filepath,name)
@@ -163,7 +163,7 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
     )
     ff.run()
     mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
-    os.remove('./application/static/analysedvideo/{name}.avi')
+    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     #Inputting file paths
     thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing)

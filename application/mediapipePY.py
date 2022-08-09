@@ -6,6 +6,7 @@ import mediapipe as mp
 from datetime import datetime
 import pandas as pd
 import os
+import sys
 class mpEstimate:
     #Static Elements
     # Font (For OpenCV Video)
@@ -76,6 +77,7 @@ class mpEstimate:
         savingpath="./application/static/analysedvideo/{}.avi".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
+        sys.stdout.flush()
        
 
         # Variables for Step Counter
@@ -285,8 +287,9 @@ class mpEstimate:
         savingpath="./application/static/analysedvideo/{}.avi".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
+        sys.stdout.flush()
         # Variables for dynamic font size
-        print(os.getcwd())
+        
         
 
         # Variables for Step Counter

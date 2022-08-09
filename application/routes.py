@@ -190,7 +190,7 @@ def get_template(refresh=False):
     search = SearchForm()
     if request.method == 'GET' and search.validate_on_submit():
         return redirect((url_for('search_results', query=search.search.data)))  # or what you want
-    return render_template('history.html', refresh=refresh,form=VideoForm(),search=search)    
+    return render_template('history.html', refresh=refresh,form=VideoForm(),search=search, history=gethistory())    
     
 
  
@@ -274,14 +274,11 @@ def history(filter=None):
         return redirect((url_for('search_results', query=search.search.data)))  # or what you want
     if filter:
         if filter == "t":
-            history = getTiming()  
-            return render_template('history.html',title="Your History", history=history, search=search, vidType="Timing")
+            return render_template('history.html',title="Your History", history=getTiming(), search=search, vidType="Timing")
         elif filter =="ba":
-            history = getBA()
-            return render_template('history.html',title="Your History", history=history, search=search, vidType="Back Angle")
-
+            return render_template('history.html',title="Your History", history=getBA(), search=search, vidType="Back Angle")
         elif filter == None:
-            return render_template('history.html',title="Your History", history=getBA(), search=search, vidType="All")
+            return render_template('history.html',title="Your History", history=gethistory(), search=search, vidType="All")
 
     return render_template('history.html',title="Your History", history=gethistory(), search=search, vidType="All")
 def getTiming():
@@ -308,7 +305,7 @@ def gethistory():
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 
-        return 0
+        return []
     
 @app.route("/settings",methods=['GET'])
 def settings():  
@@ -386,7 +383,7 @@ def get_latestAnalysis(video_id):
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 
-        return 0
+        return []
 def get_relatedVideo(video_id):
     try:
         video_info=RawVideo.query.filter_by(id=video_id, User_id=current_user.id).all()
@@ -394,4 +391,4 @@ def get_relatedVideo(video_id):
     except Exception as error:
         db.session.rollback()
         flash(error,"danger") 
-        return 0
+        return []

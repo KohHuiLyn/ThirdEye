@@ -113,7 +113,12 @@ def login():
         return '<h1>Invalid username or password</h1>'
 
     return render_template('login.html',form=form)
-
+# Logout
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/')
 @app.route('/video',methods=['GET','POST'])
 def video():
     form=VideoForm()

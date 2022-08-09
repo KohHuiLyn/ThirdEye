@@ -221,12 +221,12 @@ def upload_file( ):
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) #should include an input variable.
             if int(videoMethod)==0:
                 print("FWD BACK")
-                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")
+                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
                 
                 
             elif int(videoMethod)==1:
                 print("FWD Timing")
-                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="8m")
+                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
                                 
             return redirect(url_for('result',id=job.id,video_id=Rawvideo_id))
 

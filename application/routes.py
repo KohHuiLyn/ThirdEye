@@ -210,10 +210,11 @@ def upload_file( ):
             # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
-            Rawvideo_id=add_entry(videoEntry)
+            
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
             videoEntry=RawVideo(User_id=current_user.id,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
+            Rawvideo_id=add_entry(videoEntry)
             title=re.sub("[\s/]","-",title)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) 
             job1=q.enqueue(uploadVideo,args=(uploaded_file,filename),timeout="2h")

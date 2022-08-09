@@ -175,7 +175,7 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
 
         
 def get_template(refresh=False):
-    return render_template('index.html', refresh=refresh,form=VideoForm())    
+    return render_template('history.html', refresh=refresh,form=VideoForm())    
     
 
  

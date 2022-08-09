@@ -159,7 +159,7 @@ def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
         outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
     )
     ff.run()
-    os.remove('./application/static/analysedvideo/{name}.avi')
+    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
     
 def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
@@ -172,7 +172,7 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
     )
     ff.run()
     mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
-    os.remove('./application/static/analysedvideo/{name}.avi')
+    os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     #Inputting file paths
     thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     add_entry(thmumbnailentry)  

@@ -26,8 +26,8 @@
               <div class="accordion-body">
                 <div class="row">
                   <label for="staticName" class="col-sm-2 col-form-label">Profile Name</label>
-                  <div class="col-sm-10">
-                    <input type="text" readonly class="form-control-plaintext" id="staticName" value="John Tan">
+                  <div class="col-sm-10 my-auto">
+                    <strong class="my-auto">{{current_username}}</strong>
                   </div>
                 </div>
               </div>
@@ -45,8 +45,7 @@
                 <div class="row">
                   <label for="staticEmail" class="col-sm-2 col-form-label">Email</label>
                   <div class="col-sm-10">
-                    <input type="text" readonly class="form-control-plaintext" id="staticEmail"
-                      value="JohnTan@gmail.com">
+                    <strong class="my-auto">{{current_useremail}}</strong>
                   </div>
                 </div>
               </div>
@@ -104,7 +103,7 @@
                     {{ back_form.hidden_tag() }}
                     <div class="input-group">
                       <span class="input-group-text">Back Angle</span>
-                      {{ back_form.back_angle(id="back_angle",placeholder=db_backangle, class="form-control",
+                      {{ back_form.back_angle(id="back_angle",placeholder=db_backangle, value=db_backangle, class="form-control",
                       type="number") }}
                       {{ back_form.submit(id="submit_button", class="btn btn-outline-success") }}
                     </div>
@@ -128,7 +127,7 @@
                       {{ feet_form.hidden_tag() }}
                       <div class="input-group">
                         <span class="input-group-text">Feet Length</span>
-                        {{ feet_form.feet_length(id="feet_length",placeholder=db_feetlength, class="form-control",
+                        {{ feet_form.feet_length(id="feet_length",placeholder=db_feetlength, value=db_feetlength, class="form-control",
                         type="number") }}
                         {{ feet_form.submit(id="submit_button", class="btn btn-outline-success") }}
                       </div>

@@ -19,7 +19,8 @@ class mpEstimate:
     light_green = (127, 233, 100)
     yellow = (0, 255, 255)
     pink = (255, 0, 255)
-    # From all the Mediapipe Computer Vision Solutions, select to use Mediapipe Pose============================================
+
+    # From all the Mediapipe Computer Vision Solutions available, select to use Mediapipe Pose
     mp_pose = mp.solutions.pose
 
     # Call the MediaPipe Pose Model with defined parameters.
@@ -29,6 +30,7 @@ class mpEstimate:
     # smooth_landmarks - reduce the jitter for the detected landmarks based on the previous landmark position
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.8, model_complexity=2, smooth_landmarks=True)
 
+    # Defining some variables that the Model will use
     BackCurrentFrameNumber=dict.fromkeys(["Angle1","Angle2","Angle3","Angle4","Angle5"])
     timingframenumber=[]
     AngleAtStep=[]
@@ -40,6 +42,8 @@ class mpEstimate:
     thick = 4
     text_y = 50
     font_access = 1
+
+    # Model functions
     # Find Distance between 2 points
     def findDistance(self,x1, y1, x2, y2):
         dist = m.sqrt((x2-x1)**2+(y2-y1)**2)
@@ -56,27 +60,30 @@ class mpEstimate:
         X = x_hand - x_knee
         return X
     
+    # Ball Release Timing 
     def timing(self,file_path, name):
 
-        # Choose which video to use
-        # (For webcam input replace file name with 0)
+        # Filepath is upload raw video's path path
         file_path = file_path
         cap = cv2.VideoCapture(file_path)
-        # CV2  properties
+        # Get Frames per second, width, height and frame size of the video.
+        # FourCC Generates the Codec.
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_size = (width, height)
+        # Initialise the FFMPEG Video Writer to generate the MJPG Codec
         fourcc = cv2.VideoWriter_fourcc(*'MJPG') #for mp4 video to be played in website
         print("main ", type(name))
-        # Initialize video writer. might take a look at this again.
-        # video_output = cv2.VideoWriter('test_{0}.mp4'.format(datetime.datetime.now().strftime("%d-%m-%Y")), fourcc, fps, frame_size)
+        # Saves the Output Analysed video to this file path, as an .avi file
         savingpath="./application/static/analysedvideo/{}.avi".format(name)
+        # Setting up the Video Output
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
+        
+        # Start of Program to know model is running
         print('Starting...')
        
-
-        # Variables for Step Counter
+        # Initialise Variables for Step Counter
         steps = 0
         stage = None
         maxFeetLength = 50
@@ -88,25 +95,28 @@ class mpEstimate:
         # Variables for Timing
         access = 1
         velo = 0
-        ball_release = None
-        sliding = False
-        kneesDis = 0
-        diffBtY = 0
-        throwing = False
-        throwCount = 0
-        fastFeet = False
-        # preFrame_Y=0  
-        acceleration_count = 0
-        acceleration = None
-        deceleration = False
-        allFufill = False
         
-        currentFrame= 0
+        ball_release = None # Ball Release type - (Very Early, Early, Traditional, Delay, Late, Very Late)
+        sliding = False # If foot is sliding
+        kneesDis = 0 # distance between x coordinate of both knees 
+        diffBtY = 0 # Difference between the wrist's Y coordinate between current frame and the frame before 
+        throwing = False # If bowler is throwing the ball
+        throwCount = 0 # Must hit 3 to count as really throwing as sometimes model may mess up 
+        acceleration_count = 0
+        acceleration = None # Acceleration of sliding foot
+        deceleration = False
+        allFufill = False # If 1.8*maxfeetdist, bowler is throwing and bowler's sliding foot has accelerated criterias are all hit
+        currentFrame= 0 # The current frame of the video
+
+        # Allows Mediapipe Pose to draw the skeleton on the bowler 
         mp_drawing = mp.solutions.drawing_utils
         mp_drawing_styles = mp.solutions.drawing_styles
+
+        # Reading the video
         while cap.isOpened():
             # Capture frames
             success, image = cap.read()
+            # If video is over
             if not success:
                 print("No frames left to process!!!")
                 break
@@ -145,14 +155,15 @@ class mpEstimate:
                 r_heel_x = int(lm.landmark[lmPose.RIGHT_HEEL].x * w)
                 
                 # Calculation of Velo
-                # Heel is not * w to standardise for all videos (Make all videos have the same range)
+                # Heel is not * w to standardise for all videos (Make all videos have the same range, instead of * with their width)
                 l_heel_x = int(lm.landmark[lmPose.LEFT_HEEL].x * 500)
 
-                # When x-val is at the max, foot is placed on the floor
-                # If foot is able to be detected do this
+                
+                # If foot is able to be detected, add 20 frames to the current frame. That will be the last frame that the model will compare feet length 
                 if (r_ind_x != None or r_heel_x != None )and self.feetLenAccess == 1:
                     maxFrame = currentFrame + 20
                     self.feetLenAccess = 0
+                # When x-val is at the max, foot is placed on the floor
                 if (currentFrame < maxFrame):
                     feetLength = r_ind_x - r_heel_x
                     if feetLength > maxFeetLength:
@@ -160,59 +171,77 @@ class mpEstimate:
                         
                 #============ Functions ============
 
+                # Calculate feet distance between the left and right ankle
                 feetDist =  abs(self.findX(l_ank_x, r_ank_x))
 
-                # Steps Counter (To be improved - ie Thresholds improvements)
+                # Steps Counter.
+                # Stage is implemented to make sure the steps dont increase as long as the feet dist>maxfeetlength
                 if steps < 5:
+                    # When foot is placed down
                     if feetDist > maxFeetLength and stage == 'up':
                         steps += 1
                         stage = "down"
+
+                    # When feet pass by each other
                     elif feetDist < maxFeetLength:
                         stage = "up"
+
+                # If the feetVelo data frame has at least 3 records
                 if len(feetVelo.index)> 3:
-                    # Getting index of 3 frames ago [CHANGED!!!]
+                    # Getting index of 3 frames ago
                     preFrameIndex = len(feetVelo.index)-3
                     # If the index isn't negative, can extract out for formula.
                     diffBtY = r_wrist_y - feetVelo["Wrist_Y"][preFrameIndex]
                     # diffBtX = r_wrist_x - feetVelo["Wrist_X"][preFrame_Y]
                     
-                    #Calculate Velocity with this frame and 3 frames before
+                    #Calculate Velocity with this frame and 4 frames before
                     preIndex = len(feetVelo.index)-3
+                    # Use - 4 cos has to be 1 more than the index. This frame's index hasnt been inserted yet.
                     pre = currentFrame-4
                     velo = abs(((l_heel_x - feetVelo["LH_X"][preIndex])/(currentFrame - pre)))
 
-                # Check bowler's action whether ready to slide and throw
+                # Check for Ball Throwing
+                # If the difference between the Y coordinate of the wrist of this frame and the frame before is positive 
+                # (supposed to be negative, but for some reason mediapipe flips it) 
                 if diffBtY > 0 and r_shldr_x>r_wrist_x:
                     throwCount = throwCount+1
+                    # Throwcount to make sure that the bowler is actually throwing, and the model didn't detect wrongly
                     if throwCount == 3:
                         throwing = True
                 else:
                     throwCount = 0 
 
                 # Check whether bowler start to deceleration (stop sliding)
+                # If bowler slides, and feet slides to be more than 1.8*feetlength and is throwing the ball
                 if feetDist > 1.8*maxFeetLength and throwing == True:
+                    # Calculate acceleration of the sliding foot
                     acceleration = (velo-feetVelo["Velocity"][preIndex])/(currentFrame - pre)
+                    # If foot is decelerating 
                     if acceleration < 0:
+                        # must decelerate a few times to count as real
                         acceleration_count = acceleration_count + 1
                         if acceleration_count == 4:
                             # This deleceration just for understanding purpose
                             deceleration = True
-                            # This allFufill means all requirements(maxfeetDis, throwing, deceleration) are fufill
+                            # This allFufill means all requirements(maxfeetDis, throwing, deceleration) are fufilled
                             allFufill = True
                     else:
                         acceleration_count = 0
 
+                # If bowler is sliding is true OR if allFufill requirements are met
                 if allFufill == True or sliding==True :
+                    # Set the sliding to true as sometimes the bowler's feet may go below 1.8*feetlength
                     sliding=True
-                    # currentFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                    # if feetvelo has more than 4 records inside
                     if len(feetVelo.index) > 4:
+                        # If foot velocity is less than 0.6
                         if velo < 0.6 and access == 1:
                             kneesDis = abs(r_knee_x - l_knee_x)
                             print("distance between knee are ", kneesDis)
                             access = 0
                             ball_train_feet_dis = self.findX(r_knee_x, r_wrist_x)
                             ball_slide_feet_dis = self.findX(l_knee_x, r_wrist_x)
-                            # Calculate distance between hand and knees to determine ball release type
+                            # Calculate distance between hand and knees to determine ball release type based on percentage
                             if ball_train_feet_dis <= 0:
                                 ballDisBtKnees = abs(ball_train_feet_dis)
                                 print("Ball distance betweeen traning leg are ", ballDisBtKnees)
@@ -287,14 +316,14 @@ class mpEstimate:
         self.TimingOrBack=True
         return ball_release     
  
-
+    # Back Angle Analysis
     def backAngle(self,file_path,name):
+
         # Clear frame numbers to ensure right frame is taken.
         for key in self.BackCurrentFrameNumber:
             self.BackCurrentFrameNumber[key] = None
         self.AngleAtStep = []
-        # Choose which video to use
-        # (For webcam input replace file name with 0)
+        # Choose which video to use (uploaded raw video file will be used)
         file_path = file_path
         cap = cv2.VideoCapture(file_path)
         # CV2  properties
@@ -309,8 +338,6 @@ class mpEstimate:
         savingpath="./application/static/analysedvideo/{}.avi".format(name)
         video_output = cv2.VideoWriter(savingpath, fourcc, fps, frame_size)
         print('Starting...')
-        # Variables for dynamic font size
-        
 
         # Variables for Step Counter
         steps = 0
@@ -372,6 +399,7 @@ class mpEstimate:
                 #============ Functions ============
 
                 # Check for Camera Alignment to be in Proper Sideview
+                # Finds the distance between the left and right shoulder, if the shoulders are too far apart, the person is not in proper side view
                 offset = self.findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
                 if offset < 100:
                     cv2.putText(image, str(int(offset)) + ' Aligned', (w - 150, 30), self.font, 0.9, self.green, 2)
@@ -380,7 +408,7 @@ class mpEstimate:
 
                 feetDist = abs(self.findX(l_ank_x, r_ank_x))
 
-                # Steps Counter (To be improved - ie Thresholds improvements)
+                # Steps Counter 
                 if steps < 5:
                     if feetDist > maxFeetLength and stage == 'up':
                         steps += 1
@@ -416,7 +444,7 @@ class mpEstimate:
                 cv2.circle(image, (r_shldr_x, r_shldr_y), 7, self.pink, -1)
                 cv2.circle(image, (l_hip_x, l_hip_y), 7, self.yellow, -1)
                 cv2.circle(image, (l_hip_x, l_hip_y - 100), 7, self.yellow, -1)
-                # STR for back angle
+                # STRING for back angle
                 angle_text_string ='Frame: '+str(currentFrame)+' Torso Angle : ' + str(int(torso_inclination)) + 'deg Feet distance: '+ str(int(feetDist)) + ' Steps: '+ str(int(steps)) 
                 cv2.putText(image, angle_text_string, (10, self.text_y), self.font, self.fontsize, self.dark_blue, self.thick, cv2.LINE_AA)
                 # Join landmarks
@@ -426,7 +454,7 @@ class mpEstimate:
                 # Display angles on the annotation
                 cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), self.font, self.fontsize, self.pink, self.thick, cv2.LINE_AA)
 
-                # Write frames.
+                # Save all the back angles for each step
                 if self.BackCurrentFrameNumber['Angle1']==None:
                     if steps==1:
                         self.BackCurrentFrameNumber['Angle1']=[cap.get(cv2.CAP_PROP_POS_FRAMES)]
@@ -450,8 +478,6 @@ class mpEstimate:
                 
                 video_output.write(image)
             else:
-                # print("Cannot Detect Anything!")
-                # Write frames.
                 video_output.write(image)    
         print('Video is done!')
         cap.release()
@@ -544,7 +570,7 @@ class mpEstimate:
         noneCount=0
         frameLen=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # total number of frames in the video
         ssDict = {}
-        # Checking for Nones (when there are less than 5 step angle)
+        # Checking for Nones (when there are less than 5 steps for back angle)
         for key, value in self.BackCurrentFrameNumber.copy().items():
             if value is None:
                 # Counts for None values in the dictionary, if none count is 5, no back angle recorded. Just SS thumbnail.
@@ -554,7 +580,7 @@ class mpEstimate:
                 print("in ssdict val is", value)
                 ssDict[key] = value
         print("ssdict is",ssDict)
-        # If all values in the dictionary is None,
+        # If all values in the dictionary is None, just screenshot thumbnail
         if noneCount == 5:
             for i in range(0,2):
                 ret, frame= cap.read()

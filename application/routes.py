@@ -60,7 +60,7 @@ def add_entry(new_entry):
 
 #Creating Default User
 def create_users():
-    print("fn start")
+    #print("fn start")
     if Users.query.filter_by(username="admin").first() is None:
         print("adding user")
         hashed_password1 = generate_password_hash("Password", method='sha256')
@@ -92,13 +92,11 @@ if not RawisExist:
     print("rawvideo folder is created!")
 
 
-
-
-
-
+# Main page prompt to log in, after logging in it will redirect to video page
 @app.route("/",methods=['GET','POST'])
 def login():
     form=LoginForm()
+    # Form to validate if account exist. If it does not exist, redirect back to logi n bage
     if form.validate_on_submit():
         print("validated")
         user = Users.query.filter_by(username=form.username.data).first()
@@ -112,7 +110,7 @@ def login():
         return '<h1>Invalid username or password</h1>'
 
     return render_template('login.html',form=form)
-# Logout
+# Logout function
 @app.route('/logout')
 @login_required
 def logout():
@@ -135,7 +133,6 @@ def signup():
         flash(f"User Created")
         return render_template('signup.html', form=form)
         #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
-
     return render_template('signup.html', form=form)
 
 
@@ -192,34 +189,26 @@ def get_template(refresh=False):
         return redirect((url_for('search_results', query=search.search.data)))  # or what you want
     return render_template('history.html', refresh=refresh,form=VideoForm(),search=search, history=gethistory())    
     
-
- 
-
-
  
 #Handling File upload, and mediapipe analysis
 @app.route("/upload",methods=['GET','POST'])
 def upload_file( ):
     if request.method=='POST':
         form=VideoForm()
-        
         uploaded_file = request.files['file']      
         filename = secure_filename(uploaded_file.filename)
         if uploaded_file.filename != '': 
             title=form.title.data
             videoMethod=form.videoMethod.data #Back or Side
-            # print("VIDEOMETHOD ",type(videoMethod))
             event=form.event.data
             description=form.description.data
             uploaded_file.save(os.path.join('./application/static/rawvideo/',filename))
             DB_Filepath=os.path.join('./application/static/rawvideo/',filename)
             #ADD INTO DATABASE ( FILEPATH)
             DB_Filepath=str(DB_Filepath)
-            # print("filepath ", DB_Filepath)
             videoEntry=RawVideo(User_id=current_user.id,video_path=DB_Filepath,date=datetime.utcnow(),Event=event)
             # Adding into database
             Rawvideo_id=add_entry(videoEntry)
-            # print(Rawvideo_id)
             title=re.sub("[\s/]","-",title)
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) 
             if int(videoMethod)==0:
@@ -266,9 +255,6 @@ def getSearch(searchStr):
 @app.route('/history/<filter>')
 @login_required
 def history(filter=None):
-
-        # if filter == "ba":
-    # Search function
     search = SearchForm()
     if request.method == 'GET' and search.validate_on_submit():
         return redirect((url_for('search_results', query=search.search.data)))  # or what you want
@@ -314,11 +300,15 @@ def settings():
     update = Parameters.query.get_or_404(1)
     db_backangle = update.Back_angle
     db_feetlength = update.Feet_length
+    current_username = current_user.username
+    current_useremail = current_user.email
     return render_template('settings.html', title="Settings",
                                              back_form = back_form, 
                                              feet_form = feet_form, 
                                              db_backangle = db_backangle, 
-                                             db_feetlength = db_feetlength)
+                                             db_feetlength = db_feetlength,
+                                             current_username = current_username,
+                                             current_useremail = current_useremail)
 
 @app.route('/edit_back', methods=['GET','POST'])
 def back_param():
@@ -375,10 +365,7 @@ def analysis(videoid):
 
 def get_latestAnalysis(video_id):
     try:
-        # analysis = Analysis.query.all()
         analysis=Analysis.query.filter_by(RawVideo_id=video_id,User_id=current_user.id).all()
-        
-        # print(analysis[0].Video_filepath)
         return analysis
     except Exception as error:
         db.session.rollback()

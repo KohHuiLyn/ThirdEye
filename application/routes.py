@@ -136,19 +136,21 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
+def analyseBack(DB_Filepath,name,Rawvideo_id,event,title,description_content, current_user):
     backangles=mpEstimate().backAngle(DB_Filepath,name)
     print(backangles)
-    thumbnailentry=Thumbnail(User_id=1,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    if(description_content==None):
+        description_content=""
+    thumbnailentry=Thumbnail(User_id=current_user,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     add_entry(thumbnailentry)
    # If no backangles detected, insert record with length of 2, so that website won't confuse with Ball Release, which has length of 1.
                 # Make the angles null.
     if len(backangles)==0:
         for i in range(2):
-            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_conent)
+            analysisentry=Analysis(User_id=current_user,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO", Description=description_content)
             add_entry(analysisentry)
     for i in range (0,len(backangles),1):    
-        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_conent)
+        analysisentry=Analysis(User_id=current_user,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(i,name),Angle=int(backangles[i]),Description=description_content)
         add_entry(analysisentry)
     ff=ffmpy.FFmpeg(
         inputs={'./application/static/analysedvideo/{name}.avi'.format(name=name):None},
@@ -158,7 +160,7 @@ def analyseBack(DB_Filepath,name,Rawvideo_id,event,title):
     os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     mpEstimate().Backscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
     
-def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
+def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title,description_content, current_user):
     Timing=mpEstimate().timing(DB_Filepath,name)
     Timing=str(Timing)
     #perform mediapipe function 
@@ -167,17 +169,17 @@ def analyseTiming(DB_Filepath,name,Rawvideo_id,event,title):
         outputs={'./application/static/analysedvideo/{name}.mp4'.format(name=name):'-c:v libx264'}
     )
     ff.run()
-    mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name)
+    mpEstimate().Timingscreenshot('./application/static/analysedvideo/{name}.mp4'.format(name=name),name,Timing)
     os.remove('./application/static/analysedvideo/{name}.avi'.format(name=name))
     #Inputting file paths
-    thmumbnailentry=Thumbnail(User_id=current_user.id,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
+    thmumbnailentry=Thumbnail(User_id=current_user,RawVideo_id=Rawvideo_id,thumb_path='Thumbnail/frame_%d%s.jpg'%(0,name),Date=datetime.utcnow(),Event=event,Name=title)
     add_entry(thmumbnailentry)  
     if Timing == 'None':
-            analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_conent)
+            analysisentry=Analysis(User_id=current_user,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="NO_PHOTO",Ball_release=Timing,Description=description_content)
             add_entry(analysisentry)
                 # Else if have timing, got analysed photo filepath
     else:
-        analysisentry=Analysis(User_id=current_user.id,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_conent)
+        analysisentry=Analysis(User_id=current_user,RawVideo_id=Rawvideo_id,Name=name,Video_filepath='analysedvideo/{name}.mp4'.format(name=name),Photo_filepath="Analysedphoto/frame_%d%s.jpg"%(0,name),Ball_release=Timing,Description=description_content)
         add_entry(analysisentry) 
 
 
@@ -213,12 +215,12 @@ def upload_file( ):
             name=str(title)+str(datetime.now().strftime("%m_%d_%Y_%H_%M_%S")) 
             if int(videoMethod)==0:
                 print("FWD BACK")
-                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
+                job=q.enqueue(analyseBack,args=(DB_Filepath,name,Rawvideo_id,event,title,description,current_user.id),job_timeout="2h")
                 
                 
             elif int(videoMethod)==1:
                 print("FWD Timing")
-                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title),timeout="2h")
+                job=q.enqueue(analyseTiming,args=(DB_Filepath,name,Rawvideo_id,event,title,description,current_user.id),job_timeout="2h")
                                 
             return redirect(url_for('result',id=job.id,video_id=Rawvideo_id))
 
